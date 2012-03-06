@@ -57,6 +57,7 @@ class BackendExtensionsUploadModule extends BackendBaseActionAdd
 
 		// shorten field variables
 		$fileFile = $this->frm->getField('file');
+		$securityScan = $this->frm->getField('security_scan')->getValue();
 
 		// create ziparchive instance
 		$zip = new ZipArchive();
@@ -153,13 +154,22 @@ class BackendExtensionsUploadModule extends BackendBaseActionAdd
 			return;
 		}
 
+		// random directory within tmp dir (used to extract module to)
+		$directory = sys_get_temp_dir() . str_shuffle(time());
+		$zip->extractTo($directory, $files);
+
+		// if bad code is found, the module should not be installed
+		if($securityScan && BackendExtensionsHelper::detectBadCode($directory))
+		{
+			return false;
+		}
+
 		// unpack module files
 		$zip->extractTo(PATH_WWW, $files);
 
 		// run installer
 		BackendExtensionsModel::installModule($moduleName, $warnings);
 
-		// return the files
 		return $moduleName;
 	}
 
@@ -183,11 +193,9 @@ class BackendExtensionsUploadModule extends BackendBaseActionAdd
 	 */
 	private function loadForm()
 	{
-		// create form
 		$this->frm = new BackendForm('upload');
-
-		// create and add elements
 		$this->frm->addFile('file');
+		$this->frm->addCheckbox('security_scan', true);
 	}
 
 	/**
@@ -205,14 +213,21 @@ class BackendExtensionsUploadModule extends BackendBaseActionAdd
 			if($fileFile->isFilled(BL::err('FieldIsRequired')) && $fileFile->isAllowedExtension(array('zip'), sprintf(BL::getError('ExtensionNotAllowed'), 'zip')))
 			{
 				$moduleName = $this->installModule();
+
+				/*
+				 * When the install returns an explicit false, that means the check for nasty
+				 * functions actually found results.
+				 */
+				if($moduleName === false)
+				{
+					$fileFile->setError(BL::err('UploadedMaliciousModule'));
+				}
 			}
 
 			// passed all validation
 			if($this->frm->isCorrect())
 			{
 				// by now, the module has already been installed in processZipFile()
-
-				// redirect with fireworks
 				$this->redirect(BackendModel::createURLForAction('modules') . '&report=module-installed&var=' . $moduleName . '&highlight=row-module_' . $moduleName);
 			}
 		}

@@ -30,6 +30,9 @@
 						<label for="file">{$lblFile|ucfirst}<abbr title="{$lblRequiredField}">*</abbr></label>
 						{$fileFile} {$fileFileError}
 					</p>
+					<p>
+						{$chkSecurityScan} {$msgSecurityScan}
+					</p>
 				</div>
 			</div>
 
