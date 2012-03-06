@@ -221,6 +221,10 @@
         <translation language="hu"><![CDATA[A sablon útvonala]]></translation>
         <translation language="es"><![CDATA[Path del template]]></translation>
       </item>
+      <item type="message" name="SecurityScan">
+        <translation language="nl"><![CDATA[Controleer de module op mogelijke veiligheidslekken.]]></translation>
+        <translation language="en"><![CDATA[Check this module for possible security issues.]]></translation>
+      </item>
       <item type="message" name="TemplateInUse">
         <translation language="nl"><![CDATA[Deze template is in gebruik]]></translation>
         <translation language="en"><![CDATA[This template is in use.]]></translation>
@@ -535,6 +539,10 @@
         <translation language="en"><![CDATA[The theme's folder name doesn't match the theme name in info.xml.]]></translation>
         <translation language="es"><![CDATA[El nombre de la carpeta del tema no coincide con el nombre del tema en info.xml.]]></translation>
         <translation language="de"><![CDATA[Der Theme-Ordner-Name und Theme-Name in der info.xml stimmen nicht überein.]]></translation>
+      </item>
+      <item type="error" name="UploadedMaliciousModule">
+        <translation language="nl"><![CDATA[De veiligheidsscan heeft aangetoond dat er mogelijks onveilige functies gebruikt worden in deze module.]]></translation>
+        <translation language="en"><![CDATA[The security scan found possible security issues in this module.]]></translation>
       </item>
     </extensions>
   </backend>
