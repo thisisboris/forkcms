@@ -47,6 +47,41 @@ class BackendExtensionsHelper
 		'unlink'
 	);
 
+
+	/**
+	 * Scans the directory and its PHP files looking for bad PHP code. If bad code was found this
+	 * method will return true, otherwise false.
+	 *
+	 * @param string $directory
+	 * @return bool
+	 */
+	public static function detectBadCode($directory)
+	{
+		$list = SpoonDirectory::getList($directory, true);
+
+		/*
+		 * Check each PHP file for bad code. If it's a directory just execute this
+		 * method recursively.
+		 */
+		foreach($list as $item)
+		{
+			if(is_dir($directory . '/' . $item))
+			{
+				return self::detectBadCode($directory . '/' . $item);
+			}
+
+			elseif(SpoonFile::getExtension($item) == 'php')
+			{
+				if(self::isMaliciousFile(file_get_contents($directory . '/' . $item)))
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	/**
 	 * Checks to see if any disallowed function names are used in this piece of source code.
 	 *
