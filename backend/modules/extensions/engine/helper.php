@@ -56,7 +56,14 @@ class BackendExtensionsHelper
 	 */
 	public static function isMaliciousFile($content)
 	{
-		str_ireplace(self::$disallowedStrings, '', $content, $count);
-		return (bool) $count;
+		foreach(self::$disallowedStrings as $string)
+		{
+			if(preg_match('/\b' . $string . '\b/i', $content))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

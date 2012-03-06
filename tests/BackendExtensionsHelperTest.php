@@ -21,7 +21,9 @@ class BackendExtensionsHelperTest extends PHPUnit_Framework_TestCase
 		$badStrings = array(
 			'I hear that eval is evil',
 			'You should use Spoon methods in stead of move_uploaded_file',
-			'If you unlink my website, I will kick your ass'
+			'If you unlink my website, I will kick your ass',
+			'You should not use exec(',
+			'Nor should you use "exec"'
 		);
 
 		foreach($badStrings as $string)
