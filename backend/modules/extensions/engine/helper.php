@@ -20,7 +20,6 @@ class BackendExtensionsHelper
 	protected static $disallowedStrings = array(
 		'copy',
 		'define_syslog_variables',
-		'die',
 		'dl',
 		'ereg',
 		'ereg_replace',
