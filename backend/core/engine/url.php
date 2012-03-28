@@ -251,7 +251,7 @@ class BackendURL extends BackendBaseObject
 
 				// log attempt
 				$this->logger->warn(
-					'Unauthorized attempt to access "' . $module .'" module',
+					'Unauthorized attempt to access "' . $module . '" module',
 					array(
 						'user_id' => BackendAuthentication::getUser()->getUserId(),
 						'module' => $module
@@ -270,7 +270,7 @@ class BackendURL extends BackendBaseObject
 				{
 					// log attempt
 					$this->logger->warn(
-						'Unauthorized attempt to access "' . $action . '" action in "' . $module .'" module',
+						'Unauthorized attempt to access "' . $action . '" action in "' . $module . '" module',
 						array(
 							'user_id' => BackendAuthentication::getUser()->getUserId(),
 							'module' => $module,

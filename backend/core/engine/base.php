@@ -46,12 +46,19 @@ class BackendBaseObject
 	{
 		if($name == 'logger')
 		{
-			if(!isset($this->logger))
-			{
-				$this->logger = new \Common\Logger($this->getModule(), BACKEND_CACHE_PATH . '/logs/default.log');
-			}
-
+			$this->createLogger();
 			return $this->logger;
+		}
+	}
+
+	/**
+	 * Create a new logger instance.
+	 */
+	private function createLogger()
+	{
+		if(!isset($this->logger))
+		{
+			$this->logger = new \Common\Logger($this->getModule(), BACKEND_CACHE_PATH . '/logs/default.log');
 		}
 	}
 
@@ -85,13 +92,25 @@ class BackendBaseObject
 	{
 		// set module
 		if($module !== null) $this->setModule($module);
+		$module = $this->getModule();
 
 		// check if module is set
-		if($this->getModule() === null) throw new BackendException('Module has not yet been set.');
+		if($module === null) throw new BackendException('Module has not yet been set.');
 
 		// is this action allowed?
-		if(!BackendAuthentication::isAllowedAction($action, $this->getModule()))
+		if(!BackendAuthentication::isAllowedAction($action, $module))
 		{
+			// log attempt
+			$this->createLogger();
+			$this->logger->warn(
+				'Unauthorized attempt to access "' . $action . '" action in "' . $module . '" module',
+				array(
+					'user_id' => BackendAuthentication::getUser()->getUserId(),
+					'module' => $module,
+					'action' => $action
+				)
+			);
+
 			// set correct headers
 			SpoonHTTP::setHeadersByCode(403);
 
@@ -113,6 +132,16 @@ class BackendBaseObject
 		// is this module allowed?
 		if(!BackendAuthentication::isAllowedModule($module))
 		{
+			// log attempt
+			$this->createLogger();
+			$this->logger->warn(
+				'Unauthorized attempt to access in "' . $module .'" module',
+				array(
+					'user_id' => BackendAuthentication::getUser()->getUserId(),
+					'module' => $module
+				)
+			);
+
 			// set correct headers
 			SpoonHTTP::setHeadersByCode(403);
 

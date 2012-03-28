@@ -146,6 +146,11 @@ class BackendAJAX extends BackendBaseObject
 			// set the correct header
 			SpoonHTTP::setHeadersByCode(403);
 
+			// log attempt
+			$this->logger->warn(
+				'Unauthorized attempt to access ajax.php (not logged in)'
+			);
+
 			// output
 			$fakeAction = new BackendBaseAJAXAction();
 			$fakeAction->output(BackendBaseAJAXAction::FORBIDDEN, null, 'Not logged in.');
