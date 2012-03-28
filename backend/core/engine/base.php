@@ -8,18 +8,33 @@
  */
 
 /**
- * Base class for the backend. All other base classes should extend from this.
+ * This class will be the base of the objects used in the cms
  *
- * @author Dieter Vanden Eynde <dieter@netlash.com>
+ * @author Matthias Mullie <matthias@mullie.eu>
+ * @author Dieter Vanden Eynde <dieter.vandeneynde@wijs.be>
  */
-class BackendBase
+class BackendBaseObject
 {
+	/**
+	 * The current action
+	 *
+	 * @var	string
+	 */
+	protected $action;
+
 	/**
 	 * Logger
 	 *
 	 * @var Common\Logger
 	 */
 	private $logger;
+
+	/**
+	 * The current module
+	 *
+	 * @var	string
+	 */
+	protected $module;
 
 	/**
 	 * Lazy loading of common classes.
@@ -41,13 +56,72 @@ class BackendBase
 	}
 
 	/**
-	 * Get the module name.
+	 * Get the action
 	 *
 	 * @return string
 	 */
-	protected function getModule()
+	public function getAction()
 	{
-		return 'core';
+		return $this->action;
+	}
+
+	/**
+	 * Get module
+	 *
+	 * @return string
+	 */
+	public function getModule()
+	{
+		return ($this->module === null) ? 'core' : $this->module;
+	}
+
+	/**
+	 * Set the action
+	 *
+	 * @param string $action The action to load.
+	 * @param string[optional] $module The module to load.
+	 */
+	public function setAction($action, $module = null)
+	{
+		// set module
+		if($module !== null) $this->setModule($module);
+
+		// check if module is set
+		if($this->getModule() === null) throw new BackendException('Module has not yet been set.');
+
+		// is this action allowed?
+		if(!BackendAuthentication::isAllowedAction($action, $this->getModule()))
+		{
+			// set correct headers
+			SpoonHTTP::setHeadersByCode(403);
+
+			// throw exception
+			throw new BackendException('Action not allowed.');
+		}
+
+		// set property
+		$this->action = (string) $action;
+	}
+
+	/**
+	 * Set the module
+	 *
+	 * @param string $module The module to load.
+	 */
+	public function setModule($module)
+	{
+		// is this module allowed?
+		if(!BackendAuthentication::isAllowedModule($module))
+		{
+			// set correct headers
+			SpoonHTTP::setHeadersByCode(403);
+
+			// throw exception
+			throw new BackendException('Module not allowed.');
+		}
+
+		// set property
+		$this->module = $module;
 	}
 }
 
@@ -58,15 +132,8 @@ class BackendBase
  * @author Frederik Heyninck <frederik@figure8.be>
  * @author Davy Hellemans <davy@spoon-library.com>
  */
-class BackendBaseAction extends BackendBase
+class BackendBaseAction extends BackendBaseObject
 {
-	/**
-	 * The current action
-	 *
-	 * @var	string
-	 */
-	protected $action;
-
 	/**
 	 * The parameters (urldecoded)
 	 *
@@ -80,13 +147,6 @@ class BackendBaseAction extends BackendBase
 	 * @var	BackendHeader
 	 */
 	protected $header;
-
-	/**
-	 * The current module
-	 *
-	 * @var	string
-	 */
-	protected $module;
 
 	/**
 	 * A reference to the current template
@@ -220,26 +280,6 @@ class BackendBaseAction extends BackendBase
 	}
 
 	/**
-	 * Get the action
-	 *
-	 * @return string
-	 */
-	public function getAction()
-	{
-		return $this->action;
-	}
-
-	/**
-	 * Get the module
-	 *
-	 * @return string
-	 */
-	public function getModule()
-	{
-		return $this->module;
-	}
-
-	/**
 	 * Get a parameter for a given key
 	 * The function will return null if the key is not available
 	 * By default we will cast the return value into a string, if you want something else specify it by passing the wanted type.
@@ -278,26 +318,6 @@ class BackendBaseAction extends BackendBase
 	public function redirect($URL)
 	{
 		SpoonHTTP::redirect(str_replace('&amp;', '&', (string) $URL));
-	}
-
-	/**
-	 * Set the action, for later use
-	 *
-	 * @param string $action The action to load.
-	 */
-	private function setAction($action)
-	{
-		$this->action = (string) $action;
-	}
-
-	/**
-	 * Set the module, for later use
-	 *
-	 * @param string $module The module to load.
-	 */
-	private function setModule($module)
-	{
-		$this->module = (string) $module;
 	}
 }
 
@@ -458,7 +478,7 @@ class BackendBaseActionDelete extends BackendBaseAction
  *
  * @author Tijs Verkoyen <tijs@sumocoders.be>
  */
-class BackendBaseAJAXAction extends BackendBase
+class BackendBaseAJAXAction extends BackendBaseObject
 {
 	const OK = 200;
 	const BAD_REQUEST = 400;
@@ -466,57 +486,11 @@ class BackendBaseAJAXAction extends BackendBase
 	const ERROR = 500;
 
 	/**
-	 * The current action
-	 *
-	 * @var	string
-	 */
-	protected $action;
-
-	/**
-	 * The current module
-	 *
-	 * @var	string
-	 */
-	protected $module;
-
-	/**
-	 * The constructor will set some properties. It populates the parameter array with urldecoded values for easy-use.
-	 *
-	 * @param string $action The action to load.
-	 * @param string $module The module to load.
-	 */
-	public function __construct($action, $module)
-	{
-		$this->setModule($module);
-		$this->setAction($action);
-	}
-
-	/**
 	 * Execute the action
 	 */
 	public function execute()
 	{
 		// this method will be overwritten by the children
-	}
-
-	/**
-	 * Get the action
-	 *
-	 * @return string
-	 */
-	public function getAction()
-	{
-		return $this->action;
-	}
-
-	/**
-	 * Get the module
-	 *
-	 * @return string
-	 */
-	public function getModule()
-	{
-		return $this->module;
 	}
 
 	/**
@@ -543,26 +517,6 @@ class BackendBaseAJAXAction extends BackendBase
 		echo json_encode($response);
 		exit;
 	}
-
-	/**
-	 * Set the action, for later use
-	 *
-	 * @param string $action The action to load.
-	 */
-	protected function setAction($action)
-	{
-		$this->action = (string) $action;
-	}
-
-	/**
-	 * Set the module, for later use
-	 *
-	 * @param string $module The module to load.
-	 */
-	protected function setModule($module)
-	{
-		$this->module = (string) $module;
-	}
 }
 
 /**
@@ -570,7 +524,7 @@ class BackendBaseAJAXAction extends BackendBase
  *
  * @author Tijs Verkoyen <tijs@sumocoders.be>
  */
-class BackendBaseConfig extends BackendBase
+class BackendBaseConfig extends BackendBaseObject
 {
 	/**
 	 * The default action
@@ -594,13 +548,6 @@ class BackendBaseConfig extends BackendBase
 	protected $disabledAJAXActions = array();
 
 	/**
-	 * The current loaded module
-	 *
-	 * @var	string
-	 */
-	protected $module;
-
-	/**
 	 * All the possible actions
 	 *
 	 * @var	array
@@ -619,13 +566,7 @@ class BackendBaseConfig extends BackendBase
 	 */
 	public function __construct($module)
 	{
-		$this->module = (string) $module;
-
-		// require the model if it exists
-		if(SpoonFile::exists(BACKEND_MODULES_PATH . '/' . $this->getModule() . '/engine/model.php'))
-		{
-			require_once BACKEND_MODULES_PATH . '/' . $this->getModule() . '/engine/model.php';
-		}
+		$this->setModule($module);
 
 		// read the possible actions based on the files
 		$this->setPossibleActions();
@@ -639,16 +580,6 @@ class BackendBaseConfig extends BackendBase
 	public function getDefaultAction()
 	{
 		return $this->defaultAction;
-	}
-
-	/**
-	 * Get the current loaded module
-	 *
-	 * @return string
-	 */
-	public function getModule()
-	{
-		return $this->module;
 	}
 
 	/**
@@ -672,13 +603,38 @@ class BackendBaseConfig extends BackendBase
 	}
 
 	/**
+	 * Set the module
+	 *
+	 * We can't rely on the parent setModule function, because config could be called before any authentication is required.
+	 *
+	 * @param string $module The module to load.
+	 */
+	public function setModule($module)
+	{
+		// does this module exist?
+		$modules = SpoonDirectory::getList(BACKEND_MODULES_PATH);
+		$modules[] = 'core';
+		if(!in_array($module, $modules))
+		{
+			// set correct headers
+			SpoonHTTP::setHeadersByCode(403);
+
+			// throw exception
+			throw new BackendException('Module not allowed.');
+		}
+
+		// set property
+		$this->module = $module;
+	}
+
+	/**
 	 * Set the possible actions, based on files in folder
 	 * You can disable action in the config file. (Populate $disabledActions)
 	 */
-	protected function setPossibleActions()
+	public function setPossibleActions()
 	{
 		// get filelist (only those with .php-extension)
-		$actionFiles = (array) SpoonFile::getList(BACKEND_MODULE_PATH . '/actions', '/(.*).php/');
+		$actionFiles = (array) SpoonFile::getList(BACKEND_MODULES_PATH . '/' . $this->getModule() . '/actions', '/(.*).php/');
 
 		// loop filelist
 		foreach($actionFiles as $file)
@@ -691,7 +647,7 @@ class BackendBaseConfig extends BackendBase
 		}
 
 		// get filelist (only those with .php-extension)
-		$AJAXActionFiles = (array) SpoonFile::getList(BACKEND_MODULE_PATH . '/ajax', '/(.*).php/');
+		$AJAXActionFiles = (array) SpoonFile::getList(BACKEND_MODULES_PATH . '/' . $this->getModule() . '/ajax', '/(.*).php/');
 
 		// loop filelist
 		foreach($AJAXActionFiles as $file)
@@ -711,39 +667,14 @@ class BackendBaseConfig extends BackendBase
  * @author Tijs Verkoyen <tijs@sumocoders.be>
  * @author Dieter Vanden Eynde <dieter.vandeneynde@netlash.com>
  */
-class BackendBaseCronjob extends BackendBase
+class BackendBaseCronjob extends BackendBaseObject
 {
-	/**
-	 * The current action
-	 *
-	 * @var	string
-	 */
-	protected $action;
-
 	/**
 	 * The current id
 	 *
 	 * @var	int
 	 */
 	protected $id;
-
-	/**
-	 * The current module
-	 *
-	 * @var	string
-	 */
-	protected $module;
-
-	/**
-	 * @param string $action The action to load.
-	 * @param string $module The module to load.
-	 */
-	public function __construct($action, $module)
-	{
-		// store the current module and action (we grab them from the URL)
-		$this->setModule($module);
-		$this->setAction($action);
-	}
 
 	/**
 	 * Clear/removed the busy file
@@ -771,16 +702,6 @@ class BackendBaseCronjob extends BackendBase
 	}
 
 	/**
-	 * Get the action
-	 *
-	 * @return string
-	 */
-	public function getAction()
-	{
-		return $this->action;
-	}
-
-	/**
 	 * Get the id
 	 *
 	 * @return int
@@ -791,22 +712,37 @@ class BackendBaseCronjob extends BackendBase
 	}
 
 	/**
-	 * Get the module
+	 * Set the action
 	 *
-	 * @return string
-	 */
-	public function getModule()
-	{
-		return $this->module;
-	}
-
-	/**
-	 * Set the action, for later use
+	 * We can't rely on the parent setModule function, because a cronjob requires no login
 	 *
 	 * @param string $action The action to load.
+	 * @param string[optional] $module The module to load.
 	 */
-	protected function setAction($action)
+	public function setAction($action, $module = null)
 	{
+		// set module
+		if($module !== null) $this->setModule($module);
+
+		// check if module is set
+		if($this->getModule() === null) throw new BackendException('Module has not yet been set.');
+
+		// path to look for actions based on the module
+		if($this->getModule() == 'core') $path = BACKEND_CORE_PATH . '/cronjobs';
+		else $path = BACKEND_MODULES_PATH . '/' . $this->getModule() . '/cronjobs';
+
+		// does this module exist?
+		$actions = SpoonFile::getList($path);
+		if(!in_array($action . '.php', $actions))
+		{
+			// set correct headers
+			SpoonHTTP::setHeadersByCode(403);
+
+			// throw exception
+			throw new BackendException('Action not allowed.');
+		}
+
+		// set property
 		$this->action = (string) $action;
 	}
 
@@ -857,13 +793,28 @@ class BackendBaseCronjob extends BackendBase
 	}
 
 	/**
-	 * Set the module, for later use
+	 * Set the module
+	 *
+	 * We can't rely on the parent setModule function, because a cronjob requires no login
 	 *
 	 * @param string $module The module to load.
 	 */
-	protected function setModule($module)
+	public function setModule($module)
 	{
-		$this->module = (string) $module;
+		// does this module exist?
+		$modules = SpoonDirectory::getList(BACKEND_MODULES_PATH);
+		$modules[] = 'core';
+		if(!in_array($module, $modules))
+		{
+			// set correct headers
+			SpoonHTTP::setHeadersByCode(403);
+
+			// throw exception
+			throw new BackendException('Module not allowed.');
+		}
+
+		// set property
+		$this->module = $module;
 	}
 }
 
@@ -872,7 +823,7 @@ class BackendBaseCronjob extends BackendBase
  *
  * @author Tijs Verkoyen <tijs@sumocoders.be>
  */
-class BackendBaseWidget extends BackendBase
+class BackendBaseWidget extends BackendBaseObject
 {
 	/**
 	 * The column wherin the widget should be shown

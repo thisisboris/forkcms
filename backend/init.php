@@ -85,7 +85,7 @@ class BackendInit
 	{
 		$pathToLoad = '';
 
-	// namespaces used
+		// namespaces used
 		if(stripos($className, '\\') !== false)
 		{
 			$chunks = explode('\\', $className);
@@ -118,6 +118,7 @@ class BackendInit
 
 			// exceptions
 			$exceptions['backend'] = BACKEND_CORE_PATH . '/engine/backend.php';
+			$exceptions['backendbaseobject'] = BACKEND_CORE_PATH . '/engine/base.php';
 			$exceptions['backendajaxaction'] = BACKEND_CORE_PATH . '/engine/ajax_action.php';
 			$exceptions['backendbaseajaxaction'] = BACKEND_CORE_PATH . '/engine/base.php';
 			$exceptions['backenddatagriddb'] = BACKEND_CORE_PATH . '/engine/datagrid.php';

@@ -88,7 +88,7 @@ class BackendLocaleIndex extends BackendBaseActionIndex
 				if($type == 'act') $dataGrid->setColumnFunction('urldecode', array('[' . $lang . ']'), $lang, true);
 
 				// set header labels
-				$dataGrid->setHeaderLabels(array($lang => SpoonFilter::ucfirst(BL::getMessage(strtoupper($lang)))));
+				$dataGrid->setHeaderLabels(array($lang => SpoonFilter::ucfirst(BL::lbl(strtoupper($lang)))));
 
 				// set column attributes
 				$dataGrid->setColumnAttributes($lang, array('style' => 'width: ' . $langWidth . '%'));
@@ -192,6 +192,6 @@ class BackendLocaleIndex extends BackendBaseActionIndex
 		$this->filter['value'] = $this->getParameter('value') == null ? '' : $this->getParameter('value');
 
 		// build query for filter
-		$this->filterQuery = BackendLocaleModel::buildURLQueryByFilter($this->filter);;
+		$this->filterQuery = BackendLocaleModel::buildURLQueryByFilter($this->filter);
 	}
 }
