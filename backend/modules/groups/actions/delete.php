@@ -35,6 +35,14 @@ class BackendGroupsDelete extends BackendBaseActionDelete
 			// trigger event
 			BackendModel::triggerEvent($this->getModule(), 'after_delete', array('id' => $this->id));
 
+			$this->logger->info(
+				'User group deleted',
+				array(
+					'deletor_user_id' => BackendAuthentication::getUser()->getUserId(),
+					'deleted_group_id' => $this->id
+				)
+			);
+
 			// item was deleted, so redirect
 			$this->redirect(BackendModel::createURLForAction('index') . '&report=deleted&var=' . urlencode($this->record['name']));
 		}

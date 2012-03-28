@@ -793,6 +793,14 @@ class BackendGroupsEdit extends BackendBaseActionEdit
 				// trigger event
 				BackendModel::triggerEvent($this->getModule(), 'after_edit', array('item' => $group));
 
+				$this->logger->info(
+					'User group edited',
+					array(
+						'editor_user_id' => BackendAuthentication::getUser()->getUserId(),
+						'edited_group_id' => $this->group['id']
+					)
+				);
+
 				// everything is saved, so redirect to the overview
 				$this->redirect(BackendModel::createURLForAction('index') . '&report=edited&var=' . urlencode($group['name']) . '&highlight=row-' . $group['id']);
 			}

@@ -624,6 +624,14 @@ class BackendGroupsAdd extends BackendBaseActionAdd
 				// trigger event
 				BackendModel::triggerEvent($this->getModule(), 'after_add', array('item' => $group));
 
+				$this->logger->info(
+					'User group added',
+					array(
+						'creator_user_id' => BackendAuthentication::getUser()->getUserId(),
+						'created_group_id' => $group['id']
+					)
+				);
+
 				// everything is saved, so redirect to the overview
 				$this->redirect(BackendModel::createURLForAction('index') . '&report=added&var=' . urlencode($group['name']) . '&highlight=row-' . $group['id']);
 			}
