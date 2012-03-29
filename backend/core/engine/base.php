@@ -135,7 +135,7 @@ class BackendBaseObject
 			// log attempt
 			$this->createLogger();
 			$this->logger->warn(
-				'Unauthorized attempt to access in "' . $module .'" module',
+				'Unauthorized attempt to access in "' . $module . '" module',
 				array(
 					'user_id' => BackendAuthentication::getUser()->getUserId(),
 					'module' => $module
