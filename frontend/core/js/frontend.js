@@ -36,6 +36,9 @@ var jsFrontend =
 
 		// init twitter
 		jsFrontend.twitter.init();
+
+		// init facebook
+		jsFrontend.facebook.init();
 	},
 
 	// init
@@ -81,6 +84,11 @@ jsFrontend.controls =
  */
 jsFrontend.facebook =
 {
+	init: function()
+	{
+		jsFrontend.facebook.replaceWithFacebook();
+	},
+		
 	// will be called after Facebook is initialized
 	afterInit: function()
 	{
@@ -97,33 +105,17 @@ jsFrontend.facebook =
 			FB.Event.subscribe('message.send', function(targetUrl) { _gaq.push(['_trackSocial', 'facebook', 'send', targetUrl]); });
 		}
 
+		// subscribe to auth-events
+		FB.Event.subscribe('auth.login', jsFrontend.facebook.onLogin);
+		FB.Event.subscribe('auth.logout', jsFrontend.facebook.onLogout);
+
+		FB.getLoginStatus(function(response) {
+			if(response.status == 'connected') jsFrontend.facebook.onLogin(response);
+			else jsFrontend.facebook.onLogout(response);
+		});
+		
 		$('.publishToFacebookCheckbox').on('change', jsFrontend.facebook.checkPublishPermissions).trigger('change');
-	},
-
-	checkPublishPermissions: function(e)
-	{
-		// find element
-		var $this = $(this);
-
-		if($this.is(':checked'))
-		{
-			// we should ask for the permissions
-			jsFrontend.facebook.askPermissions(
-				'publish_stream',
-				function(response)
-				{
-					// if we don't have permissions, we should uncheck the checkbox and show an error
-					if(response === false)
-					{
-						var $closest = $this.closest('li, p, div');
-
-						$this.attr('checked', false)
-						$closest.find('formError').remove();
-						$closest('li, p, div').addClass('errorArea').append('<span class="formError">{$errFacebookNoPermissionsToPublish}</span>');
-					}
-				}
-			);
-		}
+		$('.facebookLogout').on('click', jsFrontend.facebook.logout);
 	},
 
 	askPermissions: function(scope, callback)
@@ -175,7 +167,34 @@ jsFrontend.facebook =
 							// @todo	this should be extended, or the extra permissions should be enforced...
 
 							// if the request permissions isn't available, we should answer with false
-							if(typeof newResponse.data[0][scope] == 'undefined' || newResponse.data[0][scope] == 0) response = false;
+							if(typeof newResponse.data[0][scope] == 'undefined' || newResponse.data[0][scope] == 0) 
+							{
+								FB.login(
+									function(response)
+									{
+										// user is connected and has authorized our app
+										if(response.authResponse)
+										{
+											// grab the permissions
+											FB.api(
+												'/me/permissions',
+												function(response)
+												{
+													// if the request permissions isn't available, we should answer with false
+													if(typeof response.data[0][scope] == 'undefined' || response.data[0][scope] == 0) response = false;
+
+													// execute the callback
+													callback.call(null, response);
+												}
+											);
+										}
+
+										// user isn't connected, so execute the callback with a false response
+										else callback.call(null, false);
+									},
+									{ scope: scope }
+								);
+							}
 
 							// execute the callback
 							callback.call(null, response);
@@ -184,6 +203,133 @@ jsFrontend.facebook =
 				}
 			}
 		);
+	},
+	
+	checkPublishPermissions: function(e)
+	{
+		// find element
+		var $this = $(this);
+
+		if($this.is(':checked'))
+		{
+			// we should ask for the permissions
+			jsFrontend.facebook.askPermissions(
+				'publish_stream',
+				function(response)
+				{
+					// if we don't have permissions, we should uncheck the checkbox and show an error
+					if(response === false)
+					{
+						var $closest = $($this.closest('li, p, div')[0]);
+
+						$this.attr('checked', false)
+						$closest.find('.formError').remove();
+						$closest.addClass('errorArea').append('<span class="formError">{$errFacebookNoPermissionsToPublish}</span>');
+					}
+				}
+			);
+		}
+	},
+
+	logout: function(evt)
+	{
+		// prevent default
+		evt.preventDefault();
+		
+		FB.getLoginStatus(
+			function(response)
+			{
+				if(response.status == 'connected') FB.logout();
+			}
+		);
+	},
+	
+	onLogin: function(response)
+	{
+		// ajax call!
+		$.ajax(
+		{
+			data:
+			{
+				fork: { module: 'core', action: 'facebook_change_status' },
+				type: 'login'
+			},
+			success: function(data, textStatus)
+			{
+				// alert the user
+				if(data.code != 200 && jsFrontend.debug) { alert(data.message); }
+
+				if(data.code == 200)
+				{
+					$('.facebookUserData').each(function() {
+						var $this = $(this)
+						var key = $this.data('key');
+						if(key != '' && typeof data.data[key] != 'undefined') 
+						{
+							// check for an attribute
+							var attribute = $this.data('attribute');
+							
+							// if an attribute is specified we will set the value for that attribute
+							if(typeof attribute != 'undefined') $this.attr(attribute, data.data[key]);
+							
+							// parse value as html
+							else $this.html(data.data[key]);
+						}
+					});
+
+					// show/hide elements
+					$('.hideOnFacebookLogin').hide();
+					$('.showOnFacebookLogin').show();
+				}
+			}
+		});
+	},
+	
+	onLogout: function(response)
+	{
+		// ajax call!
+		$.ajax(
+		{
+			data:
+			{
+				fork: { module: 'core', action: 'facebook_change_status' },
+				type: 'logout'
+			},
+			success: function(data, textStatus)
+			{
+				$('.hideOnFacebookLogout').hide();
+				$('.showOnFacebookLogout').show();
+			}
+		});
+		
+		// reparse
+		FB.XFBML.parse();
+	},
+	
+	replaceWithFacebook: function()
+	{
+		$('.replaceWithFacebook').each(function()
+		{
+			var element = $(this);
+			var facebookId = element.data('facebookId');
+
+			// valid gravatar id
+			if(facebookId != '')
+			{
+				// build url
+				var url = 'http://graph.facebook.com/' + facebookId + '/picture?type=square';
+
+				// create new image
+				var avatar = new Image();
+				avatar.src = url;
+
+				// reset src
+				avatar.onload = function()
+				{
+					element.attr('src', url).addClass('facebookLoaded');
+				}
+			}
+		});		
 	}
 }
 

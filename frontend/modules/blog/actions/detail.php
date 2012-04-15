@@ -114,7 +114,10 @@ class FrontendBlogDetail extends FrontendBaseBlock
 		$author = (SpoonCookie::exists('comment_author')) ? (string) SpoonCookie::get('comment_author') : null;
 		$email = (SpoonCookie::exists('comment_email')) ? (string) SpoonCookie::get('comment_email') : null;
 		$website = (SpoonCookie::exists('comment_website')) ? (string) SpoonCookie::get('comment_website') : 'http://';
-		$publishToFacebook = (SpoonCookie::exists('comment_publish_to_facebook')) ? (bool) SpoonCookie::get('comment_publish_to_facebook') : false;
+		$author = (CommonCookie::exists('comment_author')) ? CommonCookie::get('comment_author') : null;
+		$email = (CommonCookie::exists('comment_email') && SpoonFilter::isEmail(CommonCookie::get('comment_email'))) ? CommonCookie::get('comment_email') : null;
+		$website = (CommonCookie::exists('comment_website') && SpoonFilter::isURL(CommonCookie::get('comment_website'))) ? CommonCookie::get('comment_website') : 'http://';
+		$publishToFacebook = (CommonCookie::exists('comment_publish_to_facebook')) ? (bool) CommonCookie::get('comment_publish_to_facebook') : false;
 
 		// create elements
 		$this->frm->addText('author', $author);
@@ -233,9 +236,37 @@ class FrontendBlogDetail extends FrontendBaseBlock
 				if($diff < 10 && $diff != 0) $this->frm->getField('message')->addError(FL::err('CommentTimeout'));
 			}
 
+			if(FACEBOOK_HAS_APP)
+			{
+				$facebook = Spoon::get('facebook');
+				$data = $facebook->getCookie();
+
+				if($data !== false)
+				{
+					if(!SpoonSession::exists('facebook_user_data'))	// @todo	clear me when user logs out
+					{
+						$data = $facebook->get('/me', array('metadata' => 0));
+						SpoonSession::set('facebook_user_data', $data);
+					}
+					else $data = SpoonSession::get('facebook_user_data');
+				}
+				else SpoonSession::delete('facebook_user_data');
+
+				if(!isset($data['name']) || !isset($data['email']))
+				{
+					// validate required fields
+					$this->frm->getField('author')->isFilled(FL::err('AuthorIsRequired'));
+					$this->frm->getField('email')->isEmail(FL::err('EmailIsRequired'));
+				}
+			}
+			else
+			{
+				// validate required fields
+				$this->frm->getField('author')->isFilled(FL::err('AuthorIsRequired'));
+				$this->frm->getField('email')->isEmail(FL::err('EmailIsRequired'));
+			}
+
 			// validate required fields
-			$this->frm->getField('author')->isFilled(FL::err('AuthorIsRequired'));
-			$this->frm->getField('email')->isEmail(FL::err('EmailIsRequired'));
 			$this->frm->getField('message')->isFilled(FL::err('MessageIsRequired'));
 
 			// validate optional fields
@@ -251,11 +282,25 @@ class FrontendBlogDetail extends FrontendBaseBlock
 				$spamFilterEnabled = (isset($this->settings['spamfilter']) && $this->settings['spamfilter']);
 				$moderationEnabled = (isset($this->settings['moderation']) && $this->settings['moderation']);
 
+				$extraData = array('server' => $_SERVER);
+
+				// through facebook
+				if(isset($data['name']) && isset($data['email']))
+				{
+					$author = $data['name'];
+					$email = $data['email'];
+					$website = $data['link'];
+					$extraData['facebook_id'] = $data['id'];
+				}
+				else
+				{
+					$author = $this->frm->getField('author')->getValue();
+					$email = $this->frm->getField('email')->getValue();
+					$website = $this->frm->getField('website')->getValue();
+					if(trim($website) == '' || $website == 'http://') $website = null;
+				}
+
 				// reformat data
-				$author = $this->frm->getField('author')->getValue();
-				$email = $this->frm->getField('email')->getValue();
-				$website = $this->frm->getField('website')->getValue();
-				if(trim($website) == '' || $website == 'http://') $website = null;
 				$text = $this->frm->getField('message')->getValue();
 
 				// build array
@@ -267,7 +312,7 @@ class FrontendBlogDetail extends FrontendBaseBlock
 				$comment['website'] = $website;
 				$comment['text'] = $text;
 				$comment['status'] = 'published';
-				$comment['data'] = serialize(array('server' => $_SERVER));
+				$comment['data'] = serialize($extraData);
 
 				// get URL for article
 				$permaLink = FrontendNavigation::getURLForBlock('blog', 'detail') . '/' . $this->record['url'];
@@ -303,7 +348,7 @@ class FrontendBlogDetail extends FrontendBaseBlock
 
 					// build the post
 					$post = array();
-					$post['message'] = sprintf(FL::msg('BlogFacebookPublishCommentMessage'), $this->record['title']);
+					$post['message'] = sprintf(FL::msg('FacebookPublishCommentMessage'), $this->record['title']);
 					$post['link'] = SITE_URL . $this->record['full_url'];
 					$post['name'] = $this->record['title'];
 
@@ -317,7 +362,6 @@ class FrontendBlogDetail extends FrontendBaseBlock
 						if(SPOON_DEBUG) throw $e;
 					}
 				}
-
 
 				// trigger event
 				FrontendModel::triggerEvent('blog', 'after_add_comment', array('comment' => $comment));
@@ -349,10 +393,10 @@ class FrontendBlogDetail extends FrontendBaseBlock
 				// store author-data in cookies
 				try
 				{
-					SpoonCookie::set('comment_author', $author, (30 * 24 * 60 * 60), '/', '.' . $this->URL->getDomain());
-					SpoonCookie::set('comment_email', $email, (30 * 24 * 60 * 60), '/', '.' . $this->URL->getDomain());
-					SpoonCookie::set('comment_website', $website, (30 * 24 * 60 * 60), '/', '.' . $this->URL->getDomain());
-					if(FACEBOOK_HAS_APP) SpoonCookie::set('comment_publish_to_facebook', $this->frm->getField('publish_to_facebook')->getChecked(), (30 * 24 * 60 * 60), '/', '.' . $this->URL->getDomain());
+					CommonCookie::set('comment_author', $author);
+					CommonCookie::set('comment_email', $email);
+					CommonCookie::set('comment_website', $website);
+					if(FACEBOOK_HAS_APP) CommonCookie::set('comment_publish_to_facebook', $this->frm->getField('publish_to_facebook')->getChecked());
 				}
 				catch(Exception $e)
 				{

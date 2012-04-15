@@ -80,7 +80,7 @@
 							<meta itemprop="discusses" content="{$item.title}" />
 							<div class="imageHolder">
 								{option:comments.website}<a href="{$comments.website}">{/option:comments.website}
-									<img src="{$FRONTEND_CORE_URL}/layout/images/default_author_avatar.gif" width="48" height="48" alt="{$comments.author}" class="replaceWithGravatar" data-gravatar-id="{$comments.gravatar_id}" />
+									<img src="{$FRONTEND_CORE_URL}/layout/images/default_author_avatar.gif" width="48" height="48" alt="{$comments.author}" class="replaceWithGravatar replaceWithFacebook" data-gravatar-id="{$comments.gravatar_id}" data-facebook-id="{$comments.facebook_id}" />
 								{option:comments.website}</a>{/option:comments.website}
 							</div>
 							<div class="commentContent">
@@ -112,20 +112,36 @@
 					{option:commentIsSpam}<div class="message error"><p>{$msgBlogCommentIsSpam}</p></div>{/option:commentIsSpam}
 					{option:commentIsAdded}<div class="message success"><p>{$msgBlogCommentIsAdded}</p></div>{/option:commentIsAdded}
 					{form:commentsForm}
-						<div class="alignBlocks">
-							<p {option:txtAuthorError}class="errorArea"{/option:txtAuthorError}>
-								<label for="author">{$lblName|ucfirst}<abbr title="{$lblRequiredField}">*</abbr></label>
-								{$txtAuthor} {$txtAuthorError}
-							</p>
-							<p {option:txtEmailError}class="errorArea"{/option:txtEmailError}>
-								<label for="email">{$lblEmail|ucfirst}<abbr title="{$lblRequiredField}">*</abbr></label>
-								{$txtEmail} {$txtEmailError}
+						<div class="author showOnFacebookLogout hideOnFacebookLogin">
+							<div class="alignBlocks">
+								<p {option:txtAuthorError}class="errorArea"{/option:txtAuthorError}>
+									<label for="author">{$lblName|ucfirst}<abbr title="{$lblRequiredField}">*</abbr></label>
+									{$txtAuthor} {$txtAuthorError}
+								</p>
+								<p {option:txtEmailError}class="errorArea"{/option:txtEmailError}>
+									<label for="email">{$lblEmail|ucfirst}<abbr title="{$lblRequiredField}">*</abbr></label>
+									{$txtEmail} {$txtEmailError}
+								</p>
+							</div>
+							<p class="bigInput{option:txtWebsiteError} errorArea{/option:txtWebsiteError}">
+								<label for="website">{$lblWebsite|ucfirst}</label>
+								{$txtWebsite} {$txtWebsiteError}
 							</p>
 						</div>
-						<p class="bigInput{option:txtWebsiteError} errorArea{/option:txtWebsiteError}">
-							<label for="website">{$lblWebsite|ucfirst}</label>
-							{$txtWebsite} {$txtWebsiteError}
-						</p>
+						
+						{option:FACEBOOK_HAS_APP}
+							<div class="facebookLoginWrapper">
+								<div class="facebookLoggedInAs showOnFacebookLogin hideOnFacebookLogout"{option:!facebookUserData} style="display: none;"{/option:!facebookUserData}>
+									<img src="{$FRONTEND_CORE_URL}/layout/images/default_author_avatar.gif" width="48" height="48" alt="{option:facebookUserData}{$facebookUserData.name}{/option:facebookUserData}" class="replaceWithFacebook" data-facebook-id="{option:facebookUserData}{$facebookUserData.id}{/option:facebookUserData}" />
+									{option:facebookUserData}{$msgFacebookLoggedInAs|sprintf:{$facebookUserData.name}:{$facebookUserData.link}} <a href="#" class="facebookLogout">{$lblLogout|ucfirst}</a>{/option:facebookUserData}
+									{option:!facebookUserData}{$msgFacebookLoggedInAs|sprintf:'':''} <a href="#" class="facebookLogout">{$lblLogout|ucfirst}</a>{/option:!facebookUserData}
+								</div>
+								<div class="facebookLogin showOnFacebookLogout hideOnFacebookLogin"{option:facebookUserData} style="display: none;"{/option:facebookUserData}>
+									<div class="fb-login-button" data-show-faces="false" data-width="200" data-scope="email"></div>
+								</div>
+							</div>
+						{/option:FACEBOOK_HAS_APP}
+						
 						<p class="bigInput{option:txtMessageError} errorArea{/option:txtMessageError}">
 							<label for="message">{$lblMessage|ucfirst}<abbr title="{$lblRequiredField}">*</abbr></label>
 							{$txtMessage} {$txtMessageError}

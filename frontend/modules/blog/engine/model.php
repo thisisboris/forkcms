@@ -418,7 +418,12 @@ class FrontendBlogModel implements FrontendTagsInterface
 		);
 
 		// loop comments and create gravatar id
-		foreach($comments as &$row) $row['gravatar_id'] = md5($row['email']);
+		foreach($comments as &$row)
+		{
+			$row['data'] = @unserialize($row['data']);
+			$row['gravatar_id'] = md5($row['email']);
+			$row['facebook_id'] = (isset($row['data']['facebook_id'])) ? $row['data']['facebook_id'] : '';
+		}
 
 		// return
 		return $comments;
