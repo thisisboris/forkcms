@@ -81,10 +81,14 @@ class BackendModel
 		// check if debug-mode is active
 		if(SPOON_DEBUG) $warnings[] = array('message' => BL::err('DebugModeIsActive'));
 
-		// check if the fork API keys are available
-		if(self::getModuleSetting('core', 'fork_api_private_key') == '' || self::getModuleSetting('core', 'fork_api_public_key') == '')
+		// check if this action is allowed
+		if(BackendAuthentication::isAllowedAction('index', 'settings'))
 		{
-			$warnings[] = array('message' => sprintf(BL::err('ForkAPIKeys'), BackendModel::createURLForAction('settings', 'index')));
+			// check if the fork API keys are available
+			if(self::getModuleSetting('core', 'fork_api_private_key') == '' || self::getModuleSetting('core', 'fork_api_public_key') == '')
+			{
+				$warnings[] = array('message' => sprintf(BL::err('ForkAPIKeys'), BackendModel::createURLForAction('index', 'settings')));
+			}
 		}
 
 		// check for extensions warnings
@@ -615,24 +619,23 @@ class BackendModel
 				foreach($pages as $pageId => $properties)
 				{
 					// only process pages with extra_blocks
-					if(isset($properties['extra_blocks']))
-					{
-						// loop extras
-						foreach($properties['extra_blocks'] as $extra)
-						{
-							// direct link?
-							if($extra['module'] == $module && $extra['action'] == $action)
-							{
-								// exacte page was found, so return
-								return self::getURL($properties['page_id'], $language);
-							}
+					if(!isset($properties['extra_blocks'])) continue;
 
-							// correct module but no action
-							elseif($extra['module'] == $module && $extra['action'] == null)
-							{
-								// store pageId
-								$pageIdForURL = (int) $pageId;
-							}
+					// loop extras
+					foreach($properties['extra_blocks'] as $extra)
+					{
+						// direct link?
+						if($extra['module'] == $module && $extra['action'] == $action)
+						{
+							// exacte page was found, so return
+							return self::getURL($properties['page_id'], $language);
+						}
+
+						// correct module but no action
+						elseif($extra['module'] == $module && $extra['action'] == null)
+						{
+							// store pageId
+							$pageIdForURL = (int) $pageId;
 						}
 					}
 				}
@@ -1159,16 +1162,16 @@ class BackendModel
 		// get db
 		$db = self::getDB(true);
 
-		// update if already existing
-		// @todo refactor
-		if((int) $db->getVar('SELECT COUNT(*)
-									FROM hooks_subscriptions AS i
-									WHERE i.event_module = ? AND i.event_name = ? AND i.module = ?',
-									array($eventModule, $eventName, $module)) > 0)
-		{
-			// update
-			$db->update('hooks_subscriptions', $item, 'event_module = ? AND event_name = ? AND module = ?', array($eventModule, $eventName, $module));
-		}
+		// check if the subscription already exists
+		$exists = (bool) $db->getVar(
+			'SELECT COUNT(*)
+			 FROM hooks_subscriptions AS i
+			 WHERE i.event_module = ? AND i.event_name = ? AND i.module = ?',
+			array($eventModule, $eventName, $module)
+		);
+
+		// update
+		if($exists) $db->update('hooks_subscriptions', $item, 'event_module = ? AND event_name = ? AND module = ?', array($eventModule, $eventName, $module));
 
 		// insert
 		else $db->insert('hooks_subscriptions', $item);

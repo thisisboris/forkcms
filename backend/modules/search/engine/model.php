@@ -11,6 +11,7 @@
  * In this file we store all generic functions that we will be using in the search module
  *
  * @author Matthias Mullie <matthias@mullie.eu>
+ * @author Jelmer Snoeck <jelmer.snoeck@netlash.com>
  */
 class BackendSearchModel
 {
@@ -25,42 +26,6 @@ class BackendSearchModel
 		 WHERE i.language = ?';
 
 	/**
-	 * Add an index
-	 *
-	 * @param string $module The module wherin will be searched.
-	 * @param int $otherId The id of the record.
-	 * @param  array $fields A key/value pair of fields to index.
-	 * @param string[optional] $language The frontend language for this entry.
-	 */
-	public static function addIndex($module, $otherId, array $fields, $language = null)
-	{
-		// module exists?
-		if(!in_array('search', BackendModel::getModules())) return;
-
-		// no fields?
-		if(empty($fields)) return;
-
-		// set language
-		if(!$language) $language = BL::getWorkingLanguage();
-
-		// get db
-		$db = BackendModel::getDB(true);
-
-		// insert search index
-		foreach($fields as $field => $value)
-		{
-			// reformat value
-			$value = strip_tags((string) $value);
-
-			// insert in db
-			$db->insert('search_index', array('module' => (string) $module, 'other_id' => (int) $otherId, 'language' => (string) $language, 'field' => (string) $field, 'value' => $value, 'active' => 'Y'));
-		}
-
-		// invalidate the cache for search
-		self::invalidateCache();
-	}
-
-	/**
 	 * Delete a synonym
 	 *
 	 * @param int $id The id of the item we want to delete.
@@ -69,47 +34,6 @@ class BackendSearchModel
 	{
 		// delete synonym
 		BackendModel::getDB(true)->delete('search_synonyms', 'id = ?', array((int) $id));
-
-		// invalidate the cache for search
-		self::invalidateCache();
-	}
-
-	/**
-	 * Edit an index
-	 *
-	 * @param string $module The module wherin will be searched.
-	 * @param int $otherId The id of the record.
-	 * @param  array $fields A key/value pair of fields to index.
-	 * @param string[optional] $language The frontend language for this entry.
-	 */
-	public static function editIndex($module, $otherId, array $fields, $language = null)
-	{
-		// module exists?
-		if(!in_array('search', BackendModel::getModules())) return;
-
-		// no fields?
-		if(empty($fields)) return;
-
-		// set language
-		if(!$language) $language = BL::getWorkingLanguage();
-
-		// get db
-		$db = BackendModel::getDB(true);
-
-		// insert search index
-		foreach($fields as $field => $value)
-		{
-			// reformat value
-			$value = strip_tags((string) $value);
-
-			// update search index
-			$db->execute(
-				'INSERT INTO search_index (module, other_id, language, field, value, active)
-				 VALUES (?, ?, ?, ?, ?, ?)
-				 ON DUPLICATE KEY UPDATE value = ?, active = ?',
-				array((string) $module, (int) $otherId, (string) $language, (string) $field, $value, 'Y', $value, 'Y')
-			);
-		}
 
 		// invalidate the cache for search
 		self::invalidateCache();
@@ -249,6 +173,47 @@ class BackendSearchModel
 
 		// delete indexes
 		BackendModel::getDB(true)->delete('search_index', 'module = ? AND other_id = ? AND language = ?', array((string) $module, (int) $otherId, (string) $language));
+
+		// invalidate the cache for search
+		self::invalidateCache();
+	}
+
+	/**
+	 * Edit an index
+	 *
+	 * @param string $module The module wherin will be searched.
+	 * @param int $otherId The id of the record.
+	 * @param  array $fields A key/value pair of fields to index.
+	 * @param string[optional] $language The frontend language for this entry.
+	 */
+	public static function saveIndex($module, $otherId, array $fields, $language = null)
+	{
+		// module exists?
+		if(!in_array('search', BackendModel::getModules())) return;
+
+		// no fields?
+		if(empty($fields)) return;
+
+		// set language
+		if(!$language) $language = BL::getWorkingLanguage();
+
+		// get db
+		$db = BackendModel::getDB(true);
+
+		// insert search index
+		foreach($fields as $field => $value)
+		{
+			// reformat value
+			$value = strip_tags((string) $value);
+
+			// update search index
+			$db->execute(
+				'INSERT INTO search_index (module, other_id, language, field, value, active)
+				 VALUES (?, ?, ?, ?, ?, ?)
+				 ON DUPLICATE KEY UPDATE value = ?, active = ?',
+				array((string) $module, (int) $otherId, (string) $language, (string) $field, $value, 'Y', $value, 'Y')
+			);
+		}
 
 		// invalidate the cache for search
 		self::invalidateCache();
