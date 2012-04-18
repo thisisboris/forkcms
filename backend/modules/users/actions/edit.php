@@ -104,6 +104,18 @@ class BackendUsersEdit extends BackendBaseActionEdit
 		// permissions
 		$this->frm->addCheckbox('active', ($this->record['active'] == 'Y'));
 
+		// settings
+		$this->frm->addDropdown('interface_language', BackendLanguage::getInterfaceLanguages(), $this->record['settings']['interface_language']);
+		$this->frm->addDropdown('date_format', BackendUsersModel::getDateFormats(), $this->user->getSetting('date_format'));
+		$this->frm->addDropdown('time_format', BackendUsersModel::getTimeFormats(), $this->user->getSetting('time_format'));
+		$this->frm->addDropdown('number_format', BackendUsersModel::getNumberFormats(), $this->user->getSetting('number_format', 'dot_nothing'));
+
+		$this->frm->addDropDown('csv_split_character', BackendUsersModel::getCSVSplitCharacters(), $this->user->getSetting('csv_split_character'));
+		$this->frm->addDropDown('csv_line_ending', BackendUsersModel::getCSVLineEndings(), $this->user->getSetting('csv_line_ending'));
+
+		// permissions
+		$this->frm->addCheckbox('active', ($this->record['active'] == 'Y'));
+
 		// disable active field for current users
 		if($this->authenticatedUser->getUserId() == $this->record['id']) $this->frm->getField('active')->setAttribute('disabled', 'disabled');
 		$this->frm->addCheckbox('api_access', (isset($this->record['settings']['api_access']) && $this->record['settings']['api_access'] == 'Y'));
