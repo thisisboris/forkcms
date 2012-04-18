@@ -122,7 +122,7 @@ jsFrontend.facebook =
 	askPermissions: function(scope, callback)
 	{
 		// validate callback
-		if(typeof eval(callback) != 'function') return false;
+		if(typeof callback != 'function') return false;
 
 		// check if the user is connected
 		FB.getLoginStatus(
