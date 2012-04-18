@@ -109,7 +109,8 @@ jsFrontend.facebook =
 		FB.Event.subscribe('auth.login', jsFrontend.facebook.onLogin);
 		FB.Event.subscribe('auth.logout', jsFrontend.facebook.onLogout);
 
-		FB.getLoginStatus(function(response) {
+		FB.getLoginStatus(function(response) 
+		{
 			if(response.status == 'connected') jsFrontend.facebook.onLogin(response);
 			else jsFrontend.facebook.onLogout(response);
 		});
@@ -128,7 +129,7 @@ jsFrontend.facebook =
 			function(response)
 			{
 				// user is not logged in or hasn't authorized our app
-				if(response.status !== 'connected')
+				if(response.status != 'connected')
 				{
 					FB.login(
 						function(response)
@@ -218,7 +219,7 @@ jsFrontend.facebook =
 				function(response)
 				{
 					// if we don't have permissions, we should uncheck the checkbox and show an error
-					if(response === false)
+					if(response == false)
 					{
 						var $closest = $($this.closest('li, p, div')[0]);
 
@@ -257,11 +258,12 @@ jsFrontend.facebook =
 			success: function(data, textStatus)
 			{
 				// alert the user
-				if(data.code != 200 && jsFrontend.debug) { alert(data.message); }
+				if(data.code != 200 && jsFrontend.debug) alert(data.message);
 
 				if(data.code == 200)
 				{
-					$('.facebookUserData').each(function() {
+					$('.facebookUserData').each(function() 
+					{
 						var $this = $(this)
 						var key = $this.data('key');
 						if(key != '' && typeof data.data[key] != 'undefined') 
