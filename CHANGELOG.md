@@ -1,8 +1,30 @@
-3.3.5 (xxxx-xx-xx)
+3.3.7 (xxxx-xx-xx)
+--
+Bugfixes:
+
+* Pages: made it possible to delete drafts.
+
+
+3.3.6 (2012-05-01)
+--
+Improvements:
+
+* Core: upgraded jQueryUI to 1.8.20
+
+Bugfixes:
+
+* Pages: child pages of footerpages had the wrong type when dropped on a footer page.
+* Formbuilder: it is now possible to use an inactive frontend language.
+
+
+3.3.5 (2012-04-24)
 --
 Improvements:
 
 * Core: upgraded jQueryUI to 1.8.19
+* Core: SELECT 1 ... LIMIT 1 in favor of SELECT COUNT(*), more optimised queries.
+* Spoon: merged changes.
+* Core: create minify cache folders if they do not exist.
 
 
 3.3.4 (2012-04-17)

@@ -460,7 +460,7 @@ class BackendPagesModel
 	 * @param string[optional] $language The language wherin the page will be deleted, if not provided we will use the working language.
 	 * @return bool
 	 */
-	public static function delete($id, $language = null)
+	public static function delete($id, $language = null, $revisionId = null)
 	{
 		// redefine
 		$id = (int) $id;
@@ -470,7 +470,7 @@ class BackendPagesModel
 		$db = BackendModel::getDB(true);
 
 		// get record
-		$page = self::get($id, null, $language);
+		$page = self::get($id, $revisionId, $language);
 
 		// validate
 		if(empty($page)) return false;
@@ -519,9 +519,10 @@ class BackendPagesModel
 
 		// exists?
 		return (bool) BackendModel::getDB()->getVar(
-			'SELECT COUNT(i.id)
+			'SELECT 1
 			 FROM pages AS i
-			 WHERE i.id = ? AND i.language = ? AND i.status IN (?, ?)',
+			 WHERE i.id = ? AND i.language = ? AND i.status IN (?, ?)
+			 LIMIT 1',
 			array($id, $language, 'active', 'draft')
 		);
 	}
@@ -1163,17 +1164,14 @@ class BackendPagesModel
 		// no specific id
 		if($id === null)
 		{
-			// get number of childs within this parent with the specified URL
-			$number = (int) $db->getVar(
-				'SELECT COUNT(i.id)
+			// no items?
+			if((bool) $db->getVar(
+				'SELECT 1
 				 FROM pages AS i
 				 INNER JOIN meta AS m ON i.meta_id = m.id
-				 WHERE i.parent_id IN(' . implode(',', $parentIds) . ') AND i.status = ? AND m.url = ? AND i.language = ?',
-				array('active', $URL, BL::getWorkingLanguage())
-			);
-
-			// no items?
-			if($number != 0)
+				 WHERE i.parent_id IN(' . implode(',', $parentIds) . ') AND i.status = ? AND m.url = ? AND i.language = ?
+				 LIMIT 1',
+				array('active', $URL, BL::getWorkingLanguage())))
 			{
 				// add a number
 				$URL = BackendModel::addNumber($URL);
@@ -1186,17 +1184,14 @@ class BackendPagesModel
 		// one item should be ignored
 		else
 		{
-			// get number of childs within this parent with the specified URL
-			$number = (int) $db->getVar(
-				'SELECT COUNT(i.id)
+			// there are items so, call this method again.
+			if((bool) $db->getVar(
+				'SELECT 1
 				 FROM pages AS i
 				 INNER JOIN meta AS m ON i.meta_id = m.id
-				 WHERE i.parent_id IN(' . implode(',', $parentIds) . ') AND i.status = ? AND m.url = ? AND i.id != ? AND i.language = ?',
-				array('active', $URL, $id, BL::getWorkingLanguage())
-			);
-
-			// there are items so, call this method again.
-			if($number != 0)
+				 WHERE i.parent_id IN(' . implode(',', $parentIds) . ') AND i.status = ? AND m.url = ? AND i.id != ? AND i.language = ?
+				 LIMIT 1',
+				array('active', $URL, $id, BL::getWorkingLanguage())))
 			{
 				// add a number
 				$URL = BackendModel::addNumber($URL);
@@ -1333,18 +1328,19 @@ class BackendPagesModel
 		else $newParent = $droppedOnPage['parent_id'];
 
 		// decide new type
-		$newType = 'page';
-		if($droppedOn == 0) $newType = 'meta';
-		if($droppedOnPage['type'] == 'meta')
+		if($droppedOn == 0)
 		{
-			if($newParent == 0) $newType = 'meta';
-			else $newType = 'page';
+			$newType = 'meta';
 		}
-		if($droppedOnPage['type'] == 'footer') $newType = 'footer';
-		if($droppedOnPage['type'] == 'root')
+
+		elseif($newParent == 0)
 		{
-			if($newParent == 0) $newType = 'root';
-			else $newType = 'page';
+			$newType = $droppedOnPage['type'];
+		}
+
+		else
+		{
+			$newType = 'page';
 		}
 
 		// calculate new sequence for items that should be moved inside
