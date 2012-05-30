@@ -300,6 +300,10 @@ class BackendBlogEdit extends BackendBaseActionEdit
 					// the image path
 					$imagePath = FRONTEND_FILES_PATH . '/blog/images';
 
+					// create folders if needed
+					if(!SpoonDirectory::exists($imagePath . '/source')) SpoonDirectory::create($imagePath . '/source');
+					if(!SpoonDirectory::exists($imagePath . '/128x128')) SpoonDirectory::create($imagePath . '/128x128');
+
 					// if the image should be deleted
 					if($this->frm->getField('delete_image')->isChecked())
 					{
