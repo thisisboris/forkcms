@@ -297,6 +297,44 @@ class BackendModel
 	}
 
 	/**
+	 * Generate thumbnails based on the folders in the path
+	 * Use
+	 *  - 128x128 as foldername to generate an image that where the width will be 128px and the height will be 128px
+	 *  - 128x as foldername to generate an image that where the width will be 128px, the height will be calculated based on the aspect ratio.
+	 *  - x128 as foldername to generate an image that where the width will be 128px, the height will be calculated based on the aspect ratio.
+	 *
+	 * @param string $path The path wherin the thumbnail-folders will be stored.
+	 * @param string $sourceFile The location of the source file.
+	 */
+	public static function generateThumbnails($path, $sourcefile)
+	{
+		// get folder listing
+		$folders = SpoonDirectory::getList($path, false, null, '/^([0-9]*)x([0-9]*)$/');
+		$filename = basename($sourcefile);
+
+		// loop folders
+		foreach($folders as $folder)
+		{
+			$chunks = explode('x', $folder, 2);
+
+			// skip invalid items
+			if(count($chunks) != 2) continue;
+
+			// get dimensions
+			$width = ($chunks[0] != '') ? (int) $chunks[0] : null;
+			$height = ($chunks[1] != '') ? (int) $chunks[1] : null;
+
+			// generate the thumbnail
+			$thumbnail = new SpoonThumbnail($sourcefile, $width, $height);
+			$thumbnail->setAllowEnlargement(true);
+
+			// if the width & height are specified we should ignore the aspect ratio
+			if($width !== null && $height !== null) $thumbnail->setForceOriginalAspectRatio(false);
+			$thumbnail->parseToFile($path . '/' . $folder . '/' . $filename);
+		}
+	}
+
+	/**
 	 * Fetch the list of long date formats including examples of these formats.
 	 *
 	 * @return array
