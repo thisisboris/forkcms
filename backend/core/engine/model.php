@@ -309,28 +309,19 @@ class BackendModel
 	public static function generateThumbnails($path, $sourcefile)
 	{
 		// get folder listing
-		$folders = SpoonDirectory::getList($path, false, null, '/^([0-9]*)x([0-9]*)$/');
+		$folders = self::getThumbnailFolders($path);
 		$filename = basename($sourcefile);
 
 		// loop folders
 		foreach($folders as $folder)
 		{
-			$chunks = explode('x', $folder, 2);
-
-			// skip invalid items
-			if(count($chunks) != 2) continue;
-
-			// get dimensions
-			$width = ($chunks[0] != '') ? (int) $chunks[0] : null;
-			$height = ($chunks[1] != '') ? (int) $chunks[1] : null;
-
 			// generate the thumbnail
-			$thumbnail = new SpoonThumbnail($sourcefile, $width, $height);
+			$thumbnail = new SpoonThumbnail($sourcefile, $folder['width'], $folder['height']);
 			$thumbnail->setAllowEnlargement(true);
 
 			// if the width & height are specified we should ignore the aspect ratio
-			if($width !== null && $height !== null) $thumbnail->setForceOriginalAspectRatio(false);
-			$thumbnail->parseToFile($path . '/' . $folder . '/' . $filename);
+			if($folder['width'] !== null && $folder['height'] !== null) $thumbnail->setForceOriginalAspectRatio(false);
+			$thumbnail->parseToFile($folder['path'] . '/' . $filename);
 		}
 	}
 
@@ -584,6 +575,48 @@ class BackendModel
 		}
 
 		return $possibleFormats;
+	}
+
+	/**
+	 * Get the thumbnail folders
+	 *
+	 * @param string $path The path
+	 * @return array
+	 */
+	public static function getThumbnailFolders($path, $includeSource = false)
+	{
+		$folders = SpoonDirectory::getList((string) $path, false, null, '/^([0-9]*)x([0-9]*)$/');
+
+		if($includeSource && SpoonDirectory::exists($path . '/source')) $folders[] = 'source';
+
+		$return = array();
+
+		foreach($folders as $folder)
+		{
+			$item = array();
+			$chunks = explode('x', $folder, 2);
+
+			// skip invalid items
+			if(count($chunks) != 2 && !$includeSource) continue;
+
+			$item['dirname'] = $folder;
+			$item['path'] = $path . '/' . $folder;
+			if(substr($path, 0, strlen(PATH_WWW)) == PATH_WWW) $item['url'] = substr($path, strlen(PATH_WWW));
+			if($folder == 'source')
+			{
+				$item['width'] = null;
+				$item['height'] = null;
+			}
+			else
+			{
+				$item['width'] = ($chunks[0] != '') ? (int) $chunks[0] : null;
+				$item['height'] = ($chunks[1] != '') ? (int) $chunks[1] : null;
+			}
+
+			$return[] = $item;
+		}
+
+		return $return;
 	}
 
 	/**
