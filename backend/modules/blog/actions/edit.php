@@ -319,8 +319,8 @@ class BackendBlogEdit extends BackendBaseActionEdit
 						// build the image name
 						$item['image'] = $this->meta->getURL() . '.' . $this->frm->getField('image')->getExtension();
 
-						// upload the image
-						$this->frm->getField('image')->moveFile($imagePath . '/source/' . $item['image']);
+						// upload the image & generate thumbnails
+						$this->frm->getField('image')->generateThumbnails($imagePath, $item['image']);
 					}
 
 					// rename the old image
@@ -335,8 +335,12 @@ class BackendBlogEdit extends BackendBaseActionEdit
 						// only change the name if there is a difference
 						if($newName != $item['image'])
 						{
-							// move the old file to the new name
-							SpoonFile::move($imagePath . '/source/' . $item['image'], $imagePath . '/source/' . $newName);
+							// loop folders
+							foreach(BackendModel::getThumbnailFolders($imagePath, true) as $folder)
+							{
+								// move the old file to the new name
+								SpoonFile::move($folder['path'] . '/' . $item['image'], $folder['path'] . '/' . $newName);
+							}
 
 							// assign the new name to the database
 							$item['image'] = $newName;
