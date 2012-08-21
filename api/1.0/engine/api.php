@@ -344,7 +344,9 @@ class API
 	public static function output($statusCode, array $data = null)
 	{
 		// get output format
-		$output = SpoonFilter::getGetValue('format', array('xml', 'json'), 'xml');
+		$allowedFormats = array('xml', 'json');
+		$output = SpoonFilter::getGetValue('format', $allowedFormats, 'xml');
+		$output = SpoonFilter::getPostValue('format', $allowedFormats, $output);
 
 		// return in the requested format
 		switch($output)
