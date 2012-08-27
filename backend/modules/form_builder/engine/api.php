@@ -63,11 +63,11 @@ class BackendFormBuilderAPI
 	}
 
 	/**
-	 * Delete submission(s).
+	 * Delete entry/entries.
 	 *
-	 * @param string $id The id/ids of the submissions(s) to delete.
+	 * @param string $id The id/ids of the entries(s) to delete.
 	 */
-	public static function submissionsDelete($id)
+	public static function entriesDelete($id)
 	{
 		// authorize
 		if(API::authorize() && API::isValidRequestMethod('POST'))
@@ -82,14 +82,14 @@ class BackendFormBuilderAPI
 
 
 	/**
-	 * Get the submissions for a form
+	 * Get the entries for a form
 	 *
 	 * @param int $id The id of the form.
 	 * @param int[optional] $limit The maximum number of items to retrieve.
 	 * @param int[optional] $offset The offset.
 	 * @return array
 	 */
-	public static function submissionsGet($id, $limit = 30, $offset = 0)
+	public static function entriesGet($id, $limit = 30, $offset = 0)
 	{
 		if(API::authorize() && API::isValidRequestMethod('GET'))
 		{
@@ -101,7 +101,7 @@ class BackendFormBuilderAPI
 			// validate
 			if($limit > 10000) API::output(API::ERROR, array('message' => 'Limit can\'t be larger than 10000.'));
 
-			$submissions = (array) BackendModel::getDB()->getRecords(
+			$entries = (array) BackendModel::getDB()->getRecords(
 				'SELECT i.*, f.*, UNIX_TIMESTAMP(i.sent_on) AS sent_on
 				 FROM forms_data AS i
 				 INNER JOIN forms_data_fields AS f ON i.id = f.data_id
@@ -111,10 +111,10 @@ class BackendFormBuilderAPI
 				array($id, $offset, $limit)
 			);
 
-			$return = array('submissions' => null);
+			$return = array('entries' => null);
 
 			$data = array();
-			foreach($submissions as $row)
+			foreach($entries as $row)
 			{
 				if(!isset($data[$row['data_id']]))
 				{
@@ -126,42 +126,42 @@ class BackendFormBuilderAPI
 
 			foreach($data as $row)
 			{
-				$item['submission'] = array();
+				$item['entry'] = array();
 
 				// set attributes
-				$item['submission']['@attributes']['form_id'] = $row['form_id'];
-				$item['submission']['@attributes']['id'] = $row['id'];
-				$item['submission']['@attributes']['sent_on'] = date('c', $row['sent_on']);
+				$item['entry']['@attributes']['form_id'] = $row['form_id'];
+				$item['entry']['@attributes']['id'] = $row['id'];
+				$item['entry']['@attributes']['sent_on'] = date('c', $row['sent_on']);
 
 				// set content
 				foreach($row['fields'] as $key => $value)
 				{
-					$item['submission']['fields']['fields'][] = array('field' => array('name' => $key, 'value' => $value));
+					$item['entry']['fields']['fields'][] = array('field' => array('name' => $key, 'value' => $value));
 				}
 
-				$return['submissions'][$row['id']] = $item;
+				$return['entries'][$row['id']] = $item;
 			}
 
-			$return['submissions'] = array_values($return['submissions']);
+			$return['entries'] = array_values($return['entries']);
 
 			return $return;
 		}
 	}
 
 	/**
-	 * Get a single submission
+	 * Get a single entry
 	 *
-	 * @param int $id The id of the submission.
+	 * @param int $id The id of the entry.
 	 * @return array
 	 */
-	public static function submissionsGetById($id)
+	public static function entriesGetById($id)
 	{
 		if(API::authorize() && API::isValidRequestMethod('GET'))
 		{
 			// redefine
 			$id = (int) $id;
 
-			$submissions = (array) BackendModel::getDB()->getRecords(
+			$entries = (array) BackendModel::getDB()->getRecords(
 				'SELECT i.*, f.*, UNIX_TIMESTAMP(i.sent_on) AS sent_on
 				 FROM forms_data AS i
 				 INNER JOIN forms_data_fields AS f ON i.id = f.data_id
@@ -169,10 +169,10 @@ class BackendFormBuilderAPI
 				array($id)
 			);
 
-			$return = array('submission' => null);
+			$return = array('entry' => null);
 
 			$data = array();
-			foreach($submissions as $row)
+			foreach($entries as $row)
 			{
 				if(!isset($data['id'])) $data = $row;
 
@@ -180,13 +180,13 @@ class BackendFormBuilderAPI
 			}
 
 			// set attributes
-			$return['submission']['@attributes']['form_id'] = $data['form_id'];
-			$return['submission']['id'] = $data['id'];
-			$return['submission']['sent_on'] = date('c', $data['sent_on']);
+			$return['entry']['@attributes']['form_id'] = $data['form_id'];
+			$return['entry']['id'] = $data['id'];
+			$return['entry']['sent_on'] = date('c', $data['sent_on']);
 
 			foreach($data['fields'] as $key => $value)
 			{
-				$return['submission']['fields'][] = array('field' => array('name' => $key, 'value' => $value));
+				$return['entry']['fields'][] = array('field' => array('name' => $key, 'value' => $value));
 			}
 
 			return $return;
