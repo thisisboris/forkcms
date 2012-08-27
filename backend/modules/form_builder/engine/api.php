@@ -113,6 +113,9 @@ class BackendFormBuilderAPI
 
 			$return = array('entries' => null);
 
+			// any entries?
+			if(empty($entries)) return $return;
+
 			$data = array();
 			foreach($entries as $row)
 			{
@@ -168,6 +171,9 @@ class BackendFormBuilderAPI
 				 WHERE i.id = ?',
 				array($id)
 			);
+
+			// any entries?
+			if(empty($entries)) API::output(API::ERROR, array('message' => 'Not found.'));
 
 			$return = array('entry' => null);
 
