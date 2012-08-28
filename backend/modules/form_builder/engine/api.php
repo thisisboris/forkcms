@@ -101,6 +101,23 @@ class BackendFormBuilderAPI
 			// validate
 			if($limit > 10000) API::output(API::ERROR, array('message' => 'Limit can\'t be larger than 10000.'));
 
+			$fields = (array) BackendModel::getDB()->getRecords(
+				'SELECT i.type, i.settings
+				 FROM forms_fields AS i
+				 WHERE i.form_id = ?',
+				array($id)
+			);
+			$fieldTypes = array();
+			foreach($fields as $row)
+			{
+				$row['settings'] = unserialize($row['settings']);
+
+				if(isset($row['settings']['label']))
+				{
+					$fieldTypes[$row['settings']['label']] = $row['type'];
+				}
+			}
+
 			$entries = (array) BackendModel::getDB()->getRecords(
 				'SELECT i.*, f.*, UNIX_TIMESTAMP(i.sent_on) AS sent_on
 				 FROM forms_data AS i
@@ -139,7 +156,11 @@ class BackendFormBuilderAPI
 				// set content
 				foreach($row['fields'] as $key => $value)
 				{
-					$item['entry']['fields']['fields'][] = array('field' => array('name' => $key, 'value' => $value));
+					$item['entry']['fields']['fields'][] = array('field' => array(
+						'name' => $key,
+						'value' => $value,
+						'guessed_type' => (isset($fieldTypes[$key])) ? $fieldTypes[$key] : 'textbox'
+					));
 				}
 
 				$return['entries'][$row['id']] = $item;
