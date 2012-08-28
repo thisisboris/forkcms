@@ -206,6 +206,23 @@ class BackendFormBuilderAPI
 				$data['fields'][$row['label']] = unserialize($row['value']);
 			}
 
+			$fields = (array) BackendModel::getDB()->getRecords(
+				'SELECT i.type, i.settings
+				 FROM forms_fields AS i
+				 WHERE i.form_id = ?',
+				array($data['form_id'])
+			);
+			$fieldTypes = array();
+			foreach($fields as $row)
+			{
+				$row['settings'] = unserialize($row['settings']);
+
+				if(isset($row['settings']['label']))
+				{
+					$fieldTypes[$row['settings']['label']] = $row['type'];
+				}
+			}
+
 			// set attributes
 			$return['entry']['@attributes']['form_id'] = $data['form_id'];
 			$return['entry']['id'] = $data['id'];
@@ -213,7 +230,11 @@ class BackendFormBuilderAPI
 
 			foreach($data['fields'] as $key => $value)
 			{
-				$return['entry']['fields'][] = array('field' => array('name' => $key, 'value' => $value));
+				$return['entry']['fields'][] = array('field' => array(
+					'name' => $key,
+					'value' => $value,
+					'guessed_type' => (isset($fieldTypes[$key])) ? $fieldTypes[$key] : 'textbox'
+				));
 			}
 
 			return $return;
