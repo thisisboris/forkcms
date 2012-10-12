@@ -4,4 +4,3 @@
 .settings
 .*.swp
 backend/cache/navigation/
-vendor
