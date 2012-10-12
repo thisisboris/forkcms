@@ -27,7 +27,7 @@ define('SPOON_CHARSET', 'utf-8');
  * Fork configuration
  */
 // version of Fork
-define('FORK_VERSION', '3.4.3');
+define('FORK_VERSION', '3.4.4');
 
 
 /**
@@ -75,3 +75,12 @@ define('ACTION_RIGHTS_LEVEL', '<action-rights-level>');
 define('PATH_WWW', '<path-www>');
 // path to the library
 define('PATH_LIBRARY', '<path-library>');
+
+
+/**
+ * Errbit configuration
+ */
+define('ERRBIT_API_KEY', '');
+
+// require our sumo-class
+require_once PATH_LIBRARY . '/external/sumo.php';
