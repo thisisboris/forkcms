@@ -204,6 +204,8 @@ jsBackend.formBuilder.fields =
 									case 'checkboxDialog':
 										jsBackend.formBuilder.fields.saveCheckbox();
 										break;
+                                    case 'fileDialog':
+                                        jsBackend.formBuilder.fields.saveFile();
 								}
 							}
 						},
@@ -1233,6 +1235,83 @@ jsBackend.formBuilder.fields =
 			}
 		});
 	},
+    /**
+     * Handle file-uploadbox
+     */
+    saveFile: function() {
+
+        // init vars
+        var fieldId = $('#fileId').val();
+        var type = 'file';
+
+        var label = $('#fileLabel').val();
+
+        var required = ($('#fileRequired').is(':checked') ? 'Y' : 'N');
+        var requiredErrorMessage = $('#fileRequiredErrorMessage').val();
+
+        var allowedFiletypes = $.map( $('#fileAllowedTypes :selected'),
+            function(option) { return $(option).val(); }
+        );
+
+        allowedFiletypes = allowedFiletypes.join('|');
+
+        // make the call
+        $.ajax(
+            {
+                data: $.extend(jsBackend.formBuilder.fields.paramsSave,
+                    {
+                        form_id: jsBackend.formBuilder.formId,
+                        field_id: fieldId,
+                        type: type,
+                        label: label,
+                        allowed_filetypes: allowedFiletypes,
+                        required: required,
+                        required_error_message: requiredErrorMessage
+
+                    }),
+                success: function(data, textStatus)
+                {
+                    console.log(data);
+                    console.log(textStatus);
+
+                    // success
+                    if(data.code == 200)
+                    {
+                        // clear errors
+                        $('.formError').html('');
+
+                        // form contains errors
+                        if(typeof data.data.errors != 'undefined')
+                        {
+                            // assign errors
+                            if(typeof data.data.errors.label != 'undefined') $('#fileLabelError').html(data.data.errors.label);
+                            if(typeof data.data.errors.required_error_message != 'undefined') $('#fileRequiredErrorMessageError').html(data.data.errors.required_error_message);
+
+                            // toggle error messages
+                            jsBackend.formBuilder.fields.toggleValidationErrors('fileDialog');
+                        }
+
+                        // saved!
+                        else
+                        {
+                            // append field html
+                            jsBackend.formBuilder.fields.setField(data.data.field_id, data.data.field_html);
+
+                            // close console box
+                            $('#fileDialog').dialog('close');
+                        }
+                    }
+
+                    // show error message
+                    else jsBackend.messages.add('error', textStatus);
+
+                    // alert the user
+                    if(data.code != 200 && jsBackend.debug) alert(data.message);
+                }
+            });
+
+
+    },
 
 	/**
 	 * Append the field to the form or update it on its current location

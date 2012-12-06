@@ -28,6 +28,17 @@
 		</div>
 	{/option:multiple}
 
+    {* Files *}
+    {option:file}
+        <div class="fieldWrapper horizontal">
+            <p class="label">{$label}{option:required}<abbr title="{$lblRequiredField}">*</abbr>{/option:required}</p>
+            {$field}
+            <div class="filerestriction">
+                {$validTypes}
+            </div>
+        </div>
+    {/option:file}
+
 	<p class="buttonHolderRight">
 		<span class="dragAndDropHandle"></span>
 		<a class="button icon iconOnly iconDelete deleteField" href="#delete-{$id}" rel="{$id}"><span>{$lblDelete}</span></a>

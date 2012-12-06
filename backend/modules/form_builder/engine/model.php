@@ -264,7 +264,7 @@ class BackendFormBuilderModel
 	/**
 	 * Formats the recipients based on the serialized string
 	 *
-	 * @param string $string The serialized string that should be formated
+	 * @param string $string The serialized string that should be formatted
 	 * @return string
 	 */
 	public static function formatRecipients($string)
@@ -565,6 +565,9 @@ class FormBuilderHelper
 			$values = (isset($field['settings']['values']) ? $field['settings']['values'] : null);
 			$defaultValues = (isset($field['settings']['default_values']) ? $field['settings']['default_values'] : null);
 
+            // Allowed file types, for label and validation
+            $allowedFiletypes = (isset($field['settings']['allowedFiletypes']) ? $field['settings']['allowedFiletypes'] : null);
+
 			/**
 			 * Create form and parse to HTML
 			 */
@@ -634,6 +637,16 @@ class FormBuilderHelper
 				$fieldHTML = $txt->parse();
 			}
 
+            // file
+            elseif($field['type'] == 'file')
+            {
+                // Create element
+                $txt = $frm->addFile($fieldName);
+
+                // Get content
+                $fieldHTML = $txt->parse();
+            }
+
 			// heading
 			elseif($field['type'] == 'heading') $fieldHTML = '<h3>' . $values . '</h3>';
 
@@ -673,6 +686,16 @@ class FormBuilderHelper
 				$tpl->assign('multiple', true);
 			}
 
+            // File
+            elseif ($field['type'] == 'file')
+            {
+                $allowedFiletypes = (is_array($allowedFiletypes) ? join(", ", $allowedFiletypes) : $allowedFiletypes);
+
+                $tpl->assign('label', $field['settings']['label']);
+                $tpl->assign('field', $fieldHTML);
+                $tpl->assign('file', true);
+                $tpl->assign('validTypes', $allowedFiletypes);
+            }
 			// simple items
 			else
 			{

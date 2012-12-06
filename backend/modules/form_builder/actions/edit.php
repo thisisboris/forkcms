@@ -97,6 +97,23 @@ class BackendFormBuilderEdit extends BackendBaseActionEdit
 		$this->frm->addCheckbox('checkbox_required');
 		$this->frm->addText('checkbox_required_error_message');
 
+
+        // File dialog
+        $allowedTypes = array();
+        $allowedTypes['AllFiles']['allfiles'] = 'Alle bestanden';
+        $allowedTypes['Images']['allimg'] = 'All images';
+        $allowedTypes['Images']['png'] = 'PNG';
+        $allowedTypes['Images']['jpg'] = 'JPG/JPEG';
+        $allowedTypes['Images']['gif'] = 'GIF';
+        $allowedTypes['Images']['bmp'] = 'BMP';
+        $allowedTypes['Textfiles']['alltext'] = 'All textfiles';
+
+        $this->frm->addText('file_label');
+        $this->frm->addCheckbox('file_required');
+        $this->frm->addText('file_required_error_message');
+
+        $this->frm->addDropdown('file_allowed_types', $allowedTypes, array('allfiles'), true);
+
 		// heading dialog
 		$this->frm->addText('heading');
 
@@ -106,6 +123,7 @@ class BackendFormBuilderEdit extends BackendBaseActionEdit
 
 		// submit dialog
 		$this->frm->addText('submit');
+
 	}
 
 	/**

@@ -30,6 +30,20 @@
         <translation language="lt"><![CDATA[nauji laukeliai]]></translation>
         <translation language="sv"><![CDATA[lägg till fält]]></translation>
       </item>
+      <item type="label" name="AllowedTypes">
+        <translation language="nl"><![CDATA[Toegelaten bestandtypes]]></translation>
+        <translation language="en"><![CDATA[Allowed Filetypes]]></translation>
+        <translation language="it"><![CDATA[todo it]]></translation>
+        <translation language="ru"><![CDATA[todo ru]]></translation>
+        <translation language="zh"><![CDATA[todo zh]]></translation>
+        <translation language="de"><![CDATA[todo de]]></translation>
+        <translation language="fr"><![CDATA[todo fr]]></translation>
+        <translation language="hu"><![CDATA[todo hu]]></translation>
+        <translation language="es"><![CDATA[todo es]]></translation>
+        <translation language="uk"><![CDATA[todo uk]]></translation>
+        <translation language="lt"><![CDATA[todo lt]]></translation>
+        <translation language="sv"><![CDATA[todo sv]]></translation>
+      </item>
       <item type="label" name="BackToData">
         <translation language="nl"><![CDATA[terug naar inzendingen]]></translation>
         <translation language="en"><![CDATA[back to submissions]]></translation>
@@ -125,6 +139,7 @@
         <translation language="sv"><![CDATA[dropdown]]></translation>
         <translation language="lt"><![CDATA[išsiskleidžiantis]]></translation>
       </item>
+
       <item type="label" name="EditForm">
         <translation language="nl"><![CDATA[bewerk formulier "%1$s"]]></translation>
         <translation language="en"><![CDATA[edit form "%1$s"]]></translation>

@@ -21,10 +21,11 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 	{
 		parent::execute();
 
+
 		// get parameters
 		$formId = SpoonFilter::getPostValue('form_id', null, '', 'int');
 		$fieldId = SpoonFilter::getPostValue('field_id', null, '', 'int');
-		$type = SpoonFilter::getPostValue('type', array('checkbox', 'dropdown', 'heading', 'paragraph', 'radiobutton', 'submit', 'textarea', 'textbox'), '', 'string');
+		$type = SpoonFilter::getPostValue('type', array('checkbox', 'dropdown', 'heading', 'paragraph', 'radiobutton', 'submit', 'textarea', 'textbox', 'file'), '', 'string');
 		$label = trim(SpoonFilter::getPostValue('label', null, '', 'string'));
 		$values = trim(SpoonFilter::getPostValue('values', null, '', 'string'));
 		$defaultValues = trim(SpoonFilter::getPostValue('default_values', null, '', 'string'));
@@ -33,6 +34,8 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 		$validation = SpoonFilter::getPostValue('validation', array('email', 'numeric'), '', 'string');
 		$validationParameter = trim(SpoonFilter::getPostValue('validation_parameter', null, '', 'string'));
 		$errorMessage = trim(SpoonFilter::getPostValue('error_message', null, '', 'string'));
+        $allowedFiletypes = trim(SpoonFilter::getPostValue('allowed_filetypes', null, 'allfiles', 'string'));
+
 
 		// invalid form id
 		if(!BackendFormBuilderModel::exists($formId)) $this->output(self::BAD_REQUEST, null, 'form does not exist');
@@ -98,6 +101,14 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 			if($required == 'Y' && $requiredErrorMessage == '') $errors['required_error_message'] = BL::getError('ErrorMessageIsRequired');
 		}
 
+        // Validate file
+        elseif ($type == 'file')
+        {
+            if($label == '') $errors['label'] = BL::getError('LabelIsRequired');
+            if($required == 'Y' && $requiredErrorMessage == '') $errors['required_error_message'] = BL::getError('ErrorMessageIsRequired');
+            if($allowedFiletypes == '') $errors['allowed_filetypes_error_message'] = BL::getError('AllowedFiletypesIsRequired');
+        }
+
 		// got errors
 		if(!empty($errors)) $this->output(self::OK, array('errors' => $errors), 'form contains errors');
 
@@ -106,10 +117,12 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 		{
 			if($values != '') $values = SpoonFilter::htmlspecialchars($values);
 			if($defaultValues != '') $defaultValues = SpoonFilter::htmlspecialchars($defaultValues);
+            if($allowedFiletypes != '') $allowedFiletypes = SpoonFilter::htmlspecialchars($allowedFiletypes);
 		}
 
 		// split
 		if($type == 'dropdown' || $type == 'radiobutton' || $type == 'checkbox') $values = (array) explode('|', $values);
+        if($type == 'file') $allowedFiletypes = (array) explode('|', $allowedFiletypes);
 
 		/**
 		 * Save!
@@ -119,6 +132,7 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 		if($label != '') $settings['label'] = SpoonFilter::htmlspecialchars($label);
 		if($values != '') $settings['values'] = $values;
 		if($defaultValues != '') $settings['default_values'] = $defaultValues;
+        if($allowedFiletypes != '') $settings['allowedFiletypes'] = $allowedFiletypes;
 
 		// build array
 		$field = array();
@@ -180,7 +194,7 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 		// get item from database (i do this call again to keep the points of failure as low as possible)
 		$field = BackendFormBuilderModel::getField($fieldId);
 
-		// submit button isnt parsed but handled directly via javascript
+		// submit button isn't parsed but handled directly via javascript
 		if($type == 'submit') $fieldHTML = '';
 
 		// parse field to html
