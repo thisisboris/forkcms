@@ -29,6 +29,20 @@
 							</p>
 						{/option:fields.simple}
 
+                        {option:fields.file}
+                            <p{option:fields.error} class="errorArea"{/option:fields.error}>
+                                <label for="{$fields.name}">
+                                    {$fields.label}{option:fields.required}<abbr title="{$lblRequiredField}">*</abbr>{/option:fields.required}
+                                </label>
+                                {$fields.html}
+                                <div class="filerestriction">
+                                    <p class="label">{$lblAllowedTypes|ucfirst}</p>
+                                    {$fields.validTypes}
+                                </div>
+                                {option:fields.error}<span class="formError inlineError">{$fields.error}</span>{/option:fields.error}
+                            </p>
+                        {/option:fields.file}
+
 						{* Radiobuttons and checkboxes *}
 						{option:fields.multiple}
 							<div class="inputList{option:fields.error} errorArea{/option:fields.error}">

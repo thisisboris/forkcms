@@ -208,6 +208,36 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 					$item['html'] = $txt->parse();
 				}
 
+                // Fileupload
+                elseif($field['type'] == 'file')
+                {
+                    // Create element
+                    $txt = $this->frm->addFile($item['name']);
+
+                    $allowedFiletypes = $field['settings']['allowedFiletypes'];
+
+                    // Lookup restrictions
+                    $allowedTypes = array();
+                    $allowedTypes['allfiles'] = 'Alle bestanden';
+                    $allowedTypes['allimg'] = 'All images';
+                    $allowedTypes['png'] = 'PNG';
+                    $allowedTypes['jpg'] = 'JPG/JPEG';
+                    $allowedTypes['gif'] = 'GIF';
+                    $allowedTypes['bmp'] = 'BMP';
+                    $allowedTypes['alltext'] = 'All textfiles';
+
+                    $list = "<ul class='allowed-filetypes'>";
+                    foreach ($allowedFiletypes as $key) {
+                        $value = (isset($allowedTypes[$key]) ? $allowedTypes[$key] : $key);
+                        $list .= "<li class='$key list-item floatLeft'>$value</li>";
+                    }
+                    $list .= "</ul>";
+
+                    $item['validTypes'] = $list;
+                    $item['html'] = $txt->parse();
+
+                }
+
 				// heading
 				elseif($field['type'] == 'heading') $item['html'] = '<h3>' . $values . '</h3>';
 
@@ -274,11 +304,13 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 				// submit button
 				elseif($field['type'] == 'submit') $submitValue = $field['html'];
 
-				// simple items
+                elseif($field['type'] == 'file') $field['file'] = true;
+
+                // simple items
 				else $field['simple'] = true;
 
 				// errors (only for form elements)
-				if(isset($field['simple']) || isset($field['multiple'])) $field['error'] = $this->frm->getField($field['name'])->getErrors();
+				if(isset($field['simple']) || isset($field['multiple']) || isset($field['file'])) $field['error'] = $this->frm->getField($field['name'])->getErrors();
 			}
 
 			// assign
@@ -319,6 +351,10 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 				if($diff < 10 && $diff != 0) $this->frm->addError(FL::err('FormTimeout'));
 			}
 
+            echo "<pre>";
+            print_r($this->item);
+            echo "</pre>";
+
 			// validate fields
 			foreach($this->item['fields'] as $field)
 			{
@@ -328,6 +364,7 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 				// skip
 				if($field['type'] == 'submit' || $field['type'] == 'paragraph' || $field['type'] == 'heading') continue;
 
+
 				// loop other validations
 				foreach($field['validations'] as $rule => $settings)
 				{
@@ -335,7 +372,23 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 					if($this->frm->getField($fieldName)->getErrors() !== null) continue;
 
 					// required
-					if($rule == 'required') $this->frm->getField($fieldName)->isFilled($settings['error_message']);
+					if($rule == 'required')
+                    {
+                        // Files aren't posted on formsubmission.
+                        if ($field['type'] == 'file')
+                        {
+                            echo "<pre>";
+                            print_r($_FILES);
+                            echo "</pre>";
+                            die("mothafocking files");
+                        }
+                        // All other types
+                        else
+                        {
+                            $this->frm->getField($fieldName)->isFilled($settings['error_message']);
+                        }
+
+                    }
 
 					// email
 					elseif($rule == 'email')
@@ -374,30 +427,34 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 					// skip
 					if($field['type'] == 'submit' || $field['type'] == 'paragraph' || $field['type'] == 'heading') continue;
 
-					// field data
-					$fieldData['data_id'] = $dataId;
-					$fieldData['label'] = $field['settings']['label'];
-					$fieldData['value'] = $this->frm->getField('field' . $field['id'])->getValue();
+                    if ($field['type'] == 'file') {
 
-					// prepare fields for email
-					if($this->item['method'] == 'database_email')
-					{
-						// add field for email
-						$emailFields[] = array('label' => $field['settings']['label'],
-												'value' => (is_array($fieldData['value']) ? implode(',', $fieldData['value']) : nl2br($fieldData['value'])));
-					}
+                    } else {
+                        // field data
+                        $fieldData['data_id'] = $dataId;
+                        $fieldData['label'] = $field['settings']['label'];
+                        $fieldData['value'] = $this->frm->getField('field' . $field['id'])->getValue();
 
-					// clean up
-					if(is_array($fieldData['value']) && empty($fieldData['value'])) $fieldData['value'] = null;
+                        // prepare fields for email
+                        if($this->item['method'] == 'database_email')
+                        {
+                            // add field for email
+                            $emailFields[] = array('label' => $field['settings']['label'],
+                                'value' => (is_array($fieldData['value']) ? implode(',', $fieldData['value']) : nl2br($fieldData['value'])));
+                        }
 
-					// serialize
-					if($fieldData['value'] !== null) $fieldData['value'] = serialize($fieldData['value']);
+                        // clean up
+                        if(is_array($fieldData['value']) && empty($fieldData['value'])) $fieldData['value'] = null;
 
-					// save fields data
-					$fields[] = $fieldData;
+                        // serialize
+                        if($fieldData['value'] !== null) $fieldData['value'] = serialize($fieldData['value']);
 
-					// insert
-					FrontendFormBuilderModel::insertDataField($fieldData);
+                        // save fields data
+                        $fields[] = $fieldData;
+
+                        // insert
+                        FrontendFormBuilderModel::insertDataField($fieldData);
+                    }
 				}
 
 				// need to send mail

@@ -689,12 +689,27 @@ class FormBuilderHelper
             // File
             elseif ($field['type'] == 'file')
             {
-                $allowedFiletypes = (is_array($allowedFiletypes) ? join(", ", $allowedFiletypes) : $allowedFiletypes);
+                $allowedTypes = array();
+                $allowedTypes['allfiles'] = 'Alle bestanden';
+                $allowedTypes['allimg'] = 'All images';
+                $allowedTypes['png'] = 'PNG';
+                $allowedTypes['jpg'] = 'JPG/JPEG';
+                $allowedTypes['gif'] = 'GIF';
+                $allowedTypes['bmp'] = 'BMP';
+                $allowedTypes['alltext'] = 'All textfiles';
+
+                $list = "<ul class='allowed-filetypes'>";
+                foreach ($allowedFiletypes as $key) {
+
+                    $value = (isset($allowedTypes[$key]) ? $allowedTypes[$key] : $key);
+                    $list .= "<li class='$key list-item floatLeft'>$value</li>";
+                }
+                $list .= "</ul>";
 
                 $tpl->assign('label', $field['settings']['label']);
                 $tpl->assign('field', $fieldHTML);
                 $tpl->assign('file', true);
-                $tpl->assign('validTypes', $allowedFiletypes);
+                $tpl->assign('validTypes', $list);
             }
 			// simple items
 			else

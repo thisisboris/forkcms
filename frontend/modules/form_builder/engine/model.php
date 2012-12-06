@@ -16,7 +16,7 @@ class FrontendFormBuilderModel
 	 */
 	public static function get($id)
 	{
-		$id = (int) $id;
+        $id = (int) $id;
 
 		// get form
 		$form = (array) FrontendModel::getDB()->getRecord(

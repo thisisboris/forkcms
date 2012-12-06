@@ -34,6 +34,7 @@
             <p class="label">{$label}{option:required}<abbr title="{$lblRequiredField}">*</abbr>{/option:required}</p>
             {$field}
             <div class="filerestriction">
+                <p class="label">{$lblAllowedTypes|ucfirst}</p>
                 {$validTypes}
             </div>
         </div>
