@@ -276,6 +276,11 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 		$this->tpl->assign('formName', 'form' . $this->item['id']);
 		$this->tpl->assign('formAction', $this->createAction());
 
+        if ($this->requireEnctype())
+        {
+            $this->tpl->assign('formEncoding', $this->getEnctype());
+        }
+
 		// got fields
 		if(!empty($this->fieldsHTML))
 		{
@@ -300,11 +305,14 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 					// multiple items
 					$field['multiple'] = true;
 				}
+                elseif($field['type'] == 'file')
+                {
+                    $field['file'] = true;
+
+                }
 
 				// submit button
 				elseif($field['type'] == 'submit') $submitValue = $field['html'];
-
-                elseif($field['type'] == 'file') $field['file'] = true;
 
                 // simple items
 				else $field['simple'] = true;
@@ -324,6 +332,30 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 			$this->tpl->assign('error', ($this->frm->getErrors() != '' ? $this->frm->getErrors() : false));
 		}
 	}
+
+    private function requireEnctype()
+    {
+        if (!empty($this->fieldsHTML))
+        {
+            foreach ($this->fieldsHTML as &$field)
+            {
+                if ($field['type'] == 'file') return true;
+            }
+        }
+    }
+
+    private function getEnctype() {
+        // If there are files involved
+        if ($this->requireEnctype())
+        {
+            return "multipart/form-data";
+        }
+        // Default encoding
+        else
+        {
+            return "application/x-www-form-urlencoded";
+        }
+    }
 
 	/**
 	 * Parse the success message.
@@ -351,10 +383,6 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 				if($diff < 10 && $diff != 0) $this->frm->addError(FL::err('FormTimeout'));
 			}
 
-            echo "<pre>";
-            print_r($this->item);
-            echo "</pre>";
-
 			// validate fields
 			foreach($this->item['fields'] as $field)
 			{
@@ -374,20 +402,7 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 					// required
 					if($rule == 'required')
                     {
-                        // Files aren't posted on formsubmission.
-                        if ($field['type'] == 'file')
-                        {
-                            echo "<pre>";
-                            print_r($_FILES);
-                            echo "</pre>";
-                            die("mothafocking files");
-                        }
-                        // All other types
-                        else
-                        {
-                            $this->frm->getField($fieldName)->isFilled($settings['error_message']);
-                        }
-
+                        $this->frm->getField($fieldName)->isFilled($settings['error_message']);
                     }
 
 					// email
@@ -404,6 +419,26 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 						if($this->frm->getField($fieldName)->isFilled()) $this->frm->getField($fieldName)->isNumeric($settings['error_message']);
 					}
 				}
+
+                // Check if this is a file, if it is, additional validations need to occur.
+                if ($field['type'] == 'file')
+                {
+                    if (!isset($field['settings']['allowedFiletypes'])){
+                        // No validation settings found? That doesn't sound right.
+                        $this->frm->getField($fieldName)->addError($field['settings']['allowedFiletypes']['error_message']);
+                    } else {
+                        // Let's believe that our user isn't thinking of nasty things.
+                        if (!$this->frm->getField($fieldName)->isAllowedExtension($field['settings']['allowedFiletypes'])){
+                            $this->frm->getField($fieldName)->addError($field['settings']['allowedFiletypes']['error_message']);
+                        } else {
+                            // Change the filename so that they can't access infected file.
+                            // @todo do this;
+
+
+                        }
+                    }
+
+                }
 			}
 
 			// valid form

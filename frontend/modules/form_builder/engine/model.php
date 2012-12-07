@@ -71,6 +71,20 @@ class FrontendFormBuilderModel
 		return $fields;
 	}
 
+    public static function enctypeRequired($id)
+    {
+        $fields = self::getFields($id);
+        foreach ($fields as &$field)
+        {
+            if ($field['type'] == 'file') {
+                // If a filefield is encountered, we should use enctype.
+                return true;
+            }
+        }
+        // No filefield found, so no enctype. `
+        return false;
+    }
+
 	/**
 	 * Insert data.
 	 *
