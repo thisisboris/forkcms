@@ -278,6 +278,7 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 
         if ($this->requireEnctype())
         {
+            $this->tpl->assign('requireEnctype', true);
             $this->tpl->assign('formEncoding', $this->getEnctype());
         }
 
