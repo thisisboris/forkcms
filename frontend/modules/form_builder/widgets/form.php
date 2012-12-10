@@ -424,20 +424,11 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
                 // Check if this is a file, if it is, additional validations need to occur.
                 if ($field['type'] == 'file')
                 {
-                    if (!isset($field['settings']['allowedFiletypes'])){
-                        // No validation settings found? That doesn't sound right.
-                        $this->frm->getField($fieldName)->addError($field['settings']['allowedFiletypes']['error_message']);
-                    } else {
-                        // Let's believe that our user isn't thinking of nasty things.
-                        if (!$this->frm->getField($fieldName)->isAllowedExtension($field['settings']['allowedFiletypes'])){
-                            $this->frm->getField($fieldName)->addError($field['settings']['allowedFiletypes']['error_message']);
-                        } else {
-                            // Change the filename so that they can't access infected file.
-                            // @todo do this;
+                    if (!isset($field['settings']['allowedFiletypes'])) $this->frm->getField($fieldName)->addError($field['settings']['allowedFiletypes']['error_message']);
 
+                    $this->frm->getField($fieldName)->isAllowedExtension($field['settings']['allowedFiletypes'], $field['settings']['allowedFiletypes']['error_message']);
 
-                        }
-                    }
+                    $this->frm->getField($fieldName)->isAllowedMimeType($field['settings']['allowedMimetype'], $field['settings']['allowedMimetype']['error_message']);
 
                 }
 			}
@@ -463,9 +454,45 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 					// skip
 					if($field['type'] == 'submit' || $field['type'] == 'paragraph' || $field['type'] == 'heading') continue;
 
-                    if ($field['type'] == 'file') {
+                    if ($field['type'] == 'file')
+                    {
+                        // Generate a brand spanking new filename
+                        srand(time());
+                        $filename = $this->frm->getField($fieldName)->getFileName(false);
+                        $extension = $this->frm->getField($fieldName)->getExtension(true);
+                        $new_filename = "file_" . rand(1000, 9999) . "_" . md5($filename) . $extension;
+                        $path = "/files/modules/formbuilder/files/" . $new_filename;
 
-                    } else {
+                        // Write the temporary file.
+                        $this->frm->getField($fieldName)->moveFile($path);
+
+                        // field data
+                        $fieldData['data_id'] = $dataId;
+                        $fieldData['label'] = $field['settings']['label'];
+                        $fieldData['value'] = $new_filename;
+
+                        // prepare fields for email
+                        if($this->item['method'] == 'database_email')
+                        {
+                            // add field for email
+                            $emailFields[] = array('label' => $field['settings']['label'],
+                                'value' => (is_array($fieldData['value']) ? implode(',', $fieldData['value']) : nl2br($fieldData['value'])));
+                        }
+
+                        // clean up
+                        if(is_array($fieldData['value']) && empty($fieldData['value'])) $fieldData['value'] = null;
+
+                        // serialize
+                        if($fieldData['value'] !== null) $fieldData['value'] = serialize($fieldData['value']);
+
+                        // save fields data
+                        $fields[] = $fieldData;
+
+                        // insert
+                        FrontendFormBuilderModel::insertDataField($fieldData);
+                    }
+                    else
+                    {
                         // field data
                         $fieldData['data_id'] = $dataId;
                         $fieldData['label'] = $field['settings']['label'];
@@ -523,7 +550,6 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 				// redirect with identifier
 				SpoonHTTP::redirect($redirect);
 			}
-
 			// not correct, show errors
 			else
 			{
