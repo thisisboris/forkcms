@@ -557,7 +557,11 @@ jsBackend.formBuilder.fields =
 								// show dialog
 								$('#checkboxDialog').dialog('open');
 							}
-
+                            // File edit
+                            else if (data.data.field.type == 'file')
+                            {
+                                // @todo file-field editting.
+                            }
 							// heading edit
 							else if(data.data.field.type == 'heading')
 							{
@@ -1249,9 +1253,10 @@ jsBackend.formBuilder.fields =
         var required = ($('#fileRequired').is(':checked') ? 'Y' : 'N');
         var requiredErrorMessage = $('#fileRequiredErrorMessage').val();
 
-        var allowedFiletypes = $.map( $('#fileAllowedTypes :selected'),
-            function(option) { return $(option).val(); }
-        );
+        var allowedFiletypes = $.map( $('#fileAllowedTypes :selected'), function(option) { return $(option).val(); } );
+        var allowedFiletypesError = $('#fileAllowedTypesErrorMessage').val();
+
+        // @todo: Check here for duplicates, 'allimg' means all images, so png/jpeg shouldn't be saved.
 
         allowedFiletypes = allowedFiletypes.join('|');
 
@@ -1265,15 +1270,13 @@ jsBackend.formBuilder.fields =
                         type: type,
                         label: label,
                         allowed_filetypes: allowedFiletypes,
+                        allowed_filetypes_error_message: allowedFiletypesError,
                         required: required,
                         required_error_message: requiredErrorMessage
 
                     }),
                 success: function(data, textStatus)
                 {
-                    console.log(data);
-                    console.log(textStatus);
-
                     // success
                     if(data.code == 200)
                     {
