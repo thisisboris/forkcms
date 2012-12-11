@@ -565,9 +565,6 @@ class FormBuilderHelper
 			$values = (isset($field['settings']['values']) ? $field['settings']['values'] : null);
 			$defaultValues = (isset($field['settings']['default_values']) ? $field['settings']['default_values'] : null);
 
-            // Allowed file types, for label and validation
-            $allowedFiletypes = (isset($field['settings']['allowedFiletypes']) ? $field['settings']['allowedFiletypes'] : null);
-
 			/**
 			 * Create form and parse to HTML
 			 */
@@ -689,27 +686,29 @@ class FormBuilderHelper
             // File
             elseif ($field['type'] == 'file')
             {
-                $allowedTypes = array();
-                $allowedTypes['allfiles'] = 'Alle bestanden';
-                $allowedTypes['allimg'] = 'All images';
-                $allowedTypes['png'] = 'PNG';
-                $allowedTypes['jpg'] = 'JPG/JPEG';
-                $allowedTypes['gif'] = 'GIF';
-                $allowedTypes['bmp'] = 'BMP';
-                $allowedTypes['alltext'] = 'All textfiles';
-
-                $list = "<ul class='allowed-filetypes'>";
-                foreach ($allowedFiletypes as $key) {
-
-                    $value = (isset($allowedTypes[$key]) ? $allowedTypes[$key] : $key);
-                    $list .= "<li class='$key list-item floatLeft'>$value</li>";
+                $filetypes = explode('|', $field['validations']['filetype']['parameter']);
+                $validList = "<ul class='allowedTypes'>";
+                foreach ($filetypes as $value) {
+                    // Special cases like "allimg" and "alltext" are handled different.
+                    if ($value == 'allimg')
+                    {
+                        $validList .= "<li class='allimg'>All Images</li>";
+                    }
+                    elseif ($value == 'alltext')
+                    {
+                        $validList .= "<li class='alltext'>All Textfiles</li>";
+                    }
+                    else
+                    {
+                        $validList .= "<li class='$value'>$value</li>";
+                    }
                 }
-                $list .= "</ul>";
+                $validList .= "</ul>";
 
                 $tpl->assign('label', $field['settings']['label']);
                 $tpl->assign('field', $fieldHTML);
                 $tpl->assign('file', true);
-                $tpl->assign('validTypes', $list);
+                $tpl->assign('validTypes', $validList);
             }
 			// simple items
 			else
