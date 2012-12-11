@@ -155,7 +155,7 @@
       </item>
       <item type="label" name="ErrorMessage">
         <translation language="nl"><![CDATA[foutmelding]]></translation>
-        <translation language="en"><![CDATA[error mesage]]></translation>
+        <translation language="en"><![CDATA[error message]]></translation>
         <translation language="it"><![CDATA[messaggio di errore]]></translation>
         <translation language="ru"><![CDATA[Сообщение об ошибке]]></translation>
         <translation language="zh"><![CDATA[错误提示]]></translation>
