@@ -24,18 +24,23 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 
 		// get parameters
 		$formId = SpoonFilter::getPostValue('form_id', null, '', 'int');
+
 		$fieldId = SpoonFilter::getPostValue('field_id', null, '', 'int');
 		$type = SpoonFilter::getPostValue('type', array('checkbox', 'dropdown', 'heading', 'paragraph', 'radiobutton', 'submit', 'textarea', 'textbox', 'file'), '', 'string');
 		$label = trim(SpoonFilter::getPostValue('label', null, '', 'string'));
-		$values = trim(SpoonFilter::getPostValue('values', null, '', 'string'));
+
+        $values = trim(SpoonFilter::getPostValue('values', null, '', 'string'));
 		$defaultValues = trim(SpoonFilter::getPostValue('default_values', null, '', 'string'));
-		$required = SpoonFilter::getPostValue('required', array('Y','N'), 'N', 'string');
+
+        $required = SpoonFilter::getPostValue('required', array('Y','N'), 'N', 'string');
 		$requiredErrorMessage = trim(SpoonFilter::getPostValue('required_error_message', null, '', 'string'));
-		$validation = SpoonFilter::getPostValue('validation', array('email', 'numeric'), '', 'string');
+
+        $validation = SpoonFilter::getPostValue('validation', array('email', 'numeric'), '', 'string');
 		$validationParameter = trim(SpoonFilter::getPostValue('validation_parameter', null, '', 'string'));
 		$errorMessage = trim(SpoonFilter::getPostValue('error_message', null, '', 'string'));
-        $allowedFiletypes = trim(SpoonFilter::getPostValue('allowed_filetypes', null, 'allfiles', 'string'));
-        $allowedFiletypesError = trim(SpoonFilter::getPostValue('allowed_filetypes_error_message', null, 'Try again', 'string'));
+
+        $allowedFiletypes = trim(SpoonFilter::getPostValue('allowed_filetypes', null, '', 'string'));
+        $allowedFiletypesErrorMessage = trim(SpoonFilter::getPostValue('allowed_filetypes_error_message', null, '', 'string'));
 
 
 		// invalid form id
@@ -108,7 +113,7 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
             if($label == '') $errors['label'] = BL::getError('LabelIsRequired');
             if($required == 'Y' && $requiredErrorMessage == '') $errors['required_error_message'] = BL::getError('ErrorMessageIsRequired');
             if($allowedFiletypes == '') $errors['allowed_filetypes_error_message'] = BL::getError('AllowedFiletypesIsRequired');
-            if($allowedFiletypesError == '') $errorMessage['allowed_filetypes_error_message_error'] = BL::getError('AllowedFiletypesErrorIsRequired');
+            if($allowedFiletypesErrorMessage == '') $errorMessage['allowed_filetypes_error_message_error'] = BL::getError('AllowedFiletypesErrorIsRequired');
         }
 
 		// got errors
@@ -179,7 +184,7 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 
             $validate['field_id'] = $fieldId;
             $validate['type'] = 'filetype';
-            $validate['error_message'] = $allowedFiletypesError;
+            $validate['error_message'] = $allowedFiletypesErrorMessage;
             $validate['parameter'] = ($allowedFiletypes != '') ? SpoonFilter::htmlspecialchars($allowedFiletypes) : null;
 
             BackendFormBuilderModel::insertFieldValidation($validate);
