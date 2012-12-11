@@ -98,13 +98,15 @@ class BackendFormBuilderEdit extends BackendBaseActionEdit
 		$this->frm->addText('checkbox_required_error_message');
 
          // File dialog
+
+        // @TODO This isn't the most perfect way of defining which validations are implemented.
         $allowedTypes = array();
-        $allowedTypes['AllFiles']['allfiles'] = 'Alle bestanden';
+        $allowedTypes['AllFiles']['allfiles'] = 'All Files';
         $allowedTypes['Images']['allimg'] = 'All images';
+        $allowedTypes['Images']['bmp'] = 'BMP';
         $allowedTypes['Images']['png'] = 'PNG';
         $allowedTypes['Images']['jpg'] = 'JPG/JPEG';
         $allowedTypes['Images']['gif'] = 'GIF';
-        $allowedTypes['Images']['bmp'] = 'BMP';
         $allowedTypes['Textfiles']['alltext'] = 'All textfiles';
 
         $this->frm->addText('file_label');
@@ -112,6 +114,7 @@ class BackendFormBuilderEdit extends BackendBaseActionEdit
         $this->frm->addText('file_required_error_message');
 
         $this->frm->addDropdown('file_allowed_types', $allowedTypes, array('allfiles'), true);
+        $this->frm->addText('file_allowed_types_error_message');
 
 		// heading dialog
 		$this->frm->addText('heading');
