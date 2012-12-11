@@ -465,6 +465,11 @@
                             <label for="fileAllowedTypes">{$lblAllowedTypes|ucfirst}</label>
                             {$ddmFileAllowedTypes}
                         </p>
+                        <p class="fileAllowedTypesErrorMessage">
+                            <label for="fileAllowedTypesErrorMessage">{$lblErrorMessage|ucfirst}<abbr title="{$lblRequiredField}">*</abbr></label>
+                            {$txtFileAllowedTypesErrorMessage}
+                            <span id="fileAllowedTypesErrorMessageError" class="formError" style="display: none;"></span>
+                        </p>
                     </div>
                 </div>
             </div>
