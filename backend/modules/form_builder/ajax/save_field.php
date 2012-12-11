@@ -35,6 +35,7 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 		$validationParameter = trim(SpoonFilter::getPostValue('validation_parameter', null, '', 'string'));
 		$errorMessage = trim(SpoonFilter::getPostValue('error_message', null, '', 'string'));
         $allowedFiletypes = trim(SpoonFilter::getPostValue('allowed_filetypes', null, 'allfiles', 'string'));
+        $allowedFiletypesError = trim(SpoonFilter::getPostValue('allowed_filetypes_error_message', null, 'Try again', 'string'));
 
 
 		// invalid form id
@@ -107,6 +108,7 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
             if($label == '') $errors['label'] = BL::getError('LabelIsRequired');
             if($required == 'Y' && $requiredErrorMessage == '') $errors['required_error_message'] = BL::getError('ErrorMessageIsRequired');
             if($allowedFiletypes == '') $errors['allowed_filetypes_error_message'] = BL::getError('AllowedFiletypesIsRequired');
+            if($allowedFiletypesError == '') $errorMessage['allowed_filetypes_error_message_error'] = BL::getError('AllowedFiletypesErrorIsRequired');
         }
 
 		// got errors
@@ -117,12 +119,10 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 		{
 			if($values != '') $values = SpoonFilter::htmlspecialchars($values);
 			if($defaultValues != '') $defaultValues = SpoonFilter::htmlspecialchars($defaultValues);
-            if($allowedFiletypes != '') $allowedFiletypes = SpoonFilter::htmlspecialchars($allowedFiletypes);
 		}
 
 		// split
 		if($type == 'dropdown' || $type == 'radiobutton' || $type == 'checkbox') $values = (array) explode('|', $values);
-        if($type == 'file') $allowedFiletypes = (array) explode('|', $allowedFiletypes);
 
 		/**
 		 * Save!
@@ -132,7 +132,6 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 		if($label != '') $settings['label'] = SpoonFilter::htmlspecialchars($label);
 		if($values != '') $settings['values'] = $values;
 		if($defaultValues != '') $settings['default_values'] = $defaultValues;
-        if($allowedFiletypes != '') $settings['allowedFiletypes'] = $allowedFiletypes;
 
 		// build array
 		$field = array();
@@ -174,6 +173,20 @@ class BackendFormBuilderAjaxSaveField extends BackendBaseAJAXAction
 			// add to field (for parsing)
 			$field['validations']['required'] = $validate;
 		}
+
+        if($type == 'file') {
+            // Field has extra validations
+
+            $validate['field_id'] = $fieldId;
+            $validate['type'] = 'filetype';
+            $validate['error_message'] = $allowedFiletypesError;
+            $validate['parameter'] = ($allowedFiletypes != '') ? SpoonFilter::htmlspecialchars($allowedFiletypes) : null;
+
+            BackendFormBuilderModel::insertFieldValidation($validate);
+
+            $field['validations']['allowed_filetypes'] = $validate;
+        }
+
 
 		// other validation
 		if($validation != '')
