@@ -690,7 +690,11 @@ class FormBuilderHelper
                 $validList = "<ul class='allowedTypes'>";
                 foreach ($filetypes as $value) {
                     // Special cases like "allimg" and "alltext" are handled different.
-                    if ($value == 'allimg')
+                    if ($value == 'allfiles')
+                    {
+                        $validList .= "<li class='allfiles'>All Filetypes</li>";
+                    }
+                    elseif ($value == 'allimg')
                     {
                         $validList .= "<li class='allimg'>All Images</li>";
                     }

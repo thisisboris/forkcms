@@ -129,7 +129,8 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 				$item['type'] = $field['type'];
 				$item['label'] = (isset($field['settings']['label'])) ? $field['settings']['label'] : '';
 				$item['required'] = isset($field['validations']['required']);
-				$item['html'] = '';
+                $item['restrictFiletypes'] = isset($field['validations']['filetype']['parameter']);
+                $item['html'] = '';
 
 				// form values
 				$values = (isset($field['settings']['values']) ? $field['settings']['values'] : null);
@@ -211,31 +212,27 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
                 // Fileupload
                 elseif($field['type'] == 'file')
                 {
+                    if ($item['restrictFiletypes'])
+                    {
+                        $fileTypes = array();
+                        $temp = explode('|', $field['validations']['filetype']['parameter']);
+                        foreach ($temp as $key => $value) {
+
+                            // Special cases like "allimg" and "alltext" are handled different.
+                            if ($value == 'allfiles') {  $fileTypes[$key] = "All Filetypes"; continue; }
+                            if ($value == 'allimg') { $fileTypes[$key] = "All Imagefiles"; continue; }
+                            if ($value == 'alltext') { $fileTypes[$key] = "All Textfiles"; continue; }
+
+                            $fileTypes[$key] = $temp[$key];
+                        }
+
+                        unset($temp);
+                        $item['allowedFiletypes'] = $fileTypes;
+                    }
+
                     // Create element
                     $txt = $this->frm->addFile($item['name']);
-
-                    $allowedFiletypes = $field['settings']['allowedFiletypes'];
-
-                    // Lookup restrictions
-                    $allowedTypes = array();
-                    $allowedTypes['allfiles'] = 'Alle bestanden';
-                    $allowedTypes['allimg'] = 'All images';
-                    $allowedTypes['png'] = 'PNG';
-                    $allowedTypes['jpg'] = 'JPG/JPEG';
-                    $allowedTypes['gif'] = 'GIF';
-                    $allowedTypes['bmp'] = 'BMP';
-                    $allowedTypes['alltext'] = 'All textfiles';
-
-                    $list = "<ul class='allowed-filetypes'>";
-                    foreach ($allowedFiletypes as $key) {
-                        $value = (isset($allowedTypes[$key]) ? $allowedTypes[$key] : $key);
-                        $list .= "<li class='$key list-item floatLeft'>$value</li>";
-                    }
-                    $list .= "</ul>";
-
-                    $item['validTypes'] = $list;
                     $item['html'] = $txt->parse();
-
                 }
 
 				// heading
@@ -309,7 +306,6 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
                 elseif($field['type'] == 'file')
                 {
                     $field['file'] = true;
-
                 }
 
 				// submit button
@@ -343,6 +339,8 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
                 if ($field['type'] == 'file') return true;
             }
         }
+
+        return false;
     }
 
     private function getEnctype() {
@@ -419,19 +417,20 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
 						// only check this if the field is filled, if the field is required it will be validated before
 						if($this->frm->getField($fieldName)->isFilled()) $this->frm->getField($fieldName)->isNumeric($settings['error_message']);
 					}
-				}
 
-                // Check if this is a file, if it is, additional validations need to occur.
-                if ($field['type'] == 'file')
-                {
-                    if (!isset($field['settings']['allowedFiletypes'])) $this->frm->getField($fieldName)->addError($field['settings']['allowedFiletypes']['error_message']);
+                    // File validation
+                    elseif($rule == 'filetype' && (strpos($settings['parameter'], 'allfiles') === false))
+                    {
+                            $settings['parameter'] = str_replace("allimg", "jpg|png|gif|bmp", $settings['parameter'] );
+                            $settings['parameter'] = str_replace("alltext", "txt|doc|docx|rtf", $settings['parameter'] );
 
-                    $this->frm->getField($fieldName)->isAllowedExtension($field['settings']['allowedFiletypes'], $field['settings']['allowedFiletypes']['error_message']);
+                            $validTypes = explode('|', $settings['parameter']);
 
-                    $this->frm->getField($fieldName)->isAllowedMimeType($field['settings']['allowedMimetype'], $field['settings']['allowedMimetype']['error_message']);
-
+                            if($this->frm->getField($fieldName)->isFilled()) $this->frm->getField($fieldName)->isAllowedExtension($validTypes, $settings['error_message']);
+                    }
                 }
-			}
+            }
+
 
 			// valid form
 			if($this->frm->isCorrect())
@@ -457,14 +456,17 @@ class FrontendFormBuilderWidgetForm extends FrontendBaseWidget
                     if ($field['type'] == 'file')
                     {
                         // Generate a brand spanking new filename
-                        srand(time());
-                        $filename = $this->frm->getField($fieldName)->getFileName(false);
-                        $extension = $this->frm->getField($fieldName)->getExtension(true);
-                        $new_filename = "file_" . rand(1000, 9999) . "_" . md5($filename) . $extension;
-                        $path = "/files/modules/formbuilder/files/" . $new_filename;
+                        $filename = $this->frm->getField('field' . $field['id'])->getFileName(false);
+                        $extension = $this->frm->getField('field' . $field['id'])->getExtension(true);
+                        $new_filename = "file_" . time() . "_" . md5($filename . 'field' . $field['id']) . '.' . $extension;
+                        $path = "frontend/files/formbuilder/" . str_replace(' ', '_', $this->frm->getName()) . '/' . $new_filename;
 
                         // Write the temporary file.
-                        $this->frm->getField($fieldName)->moveFile($path);
+                        if (!$this->frm->getField('field' . $field['id'])->moveFile($path))
+                        {
+                            $this->frm->getField('field' . $field['id'])->addError("Unable to move the file: " . $this->frm->getField('field' . $field['id'])->getFileName(false));
+                            die("Unable to move the file: " . $this->frm->getField('field' . $field['id'])->getFileName(false));
+                        }
 
                         // field data
                         $fieldData['data_id'] = $dataId;

@@ -1256,9 +1256,58 @@ jsBackend.formBuilder.fields =
         var allowedFiletypes = $.map( $('#fileAllowedTypes :selected'), function(option) { return $(option).val(); } );
         var allowedFiletypesError = $('#fileAllowedTypesErrorMessage').val();
 
-        // @todo: Check here for duplicates, 'allimg' means all images, so png/jpeg shouldn't be saved.
+        var length = allowedFiletypes.length;
+        var allimg = false;
+        var alltext = false;
+        var allfiles = false;
+        var cleanArray = [];
 
-        allowedFiletypes = allowedFiletypes.join('|');
+        allowedFiletypes.sort();
+
+        for (var i = 0; i < length; i++)
+        {
+            if (allowedFiletypes[i] == 'allimg') { allimg = true; cleanArray.push(allowedFiletypes[i]); allowedFiletypes.splice(i, 1);  }
+            if (allowedFiletypes[i] == 'alltext') { alltext = true; cleanArray.push(allowedFiletypes[i]); allowedFiletypes.splice(i, 1); }
+            if (allowedFiletypes[i] == 'allfiles') { allfiles = true; cleanArray.push(allowedFiletypes[i]); allowedFiletypes.splice(i, 1);  }
+        }
+        // Reset array keys.
+        allowedFiletypes.sort();
+
+        // Get new length,
+        length = allowedFiletypes.length;
+
+        // Check if we didn't want allfiles.
+        if (!allfiles)
+        {
+            for (i = 0; i < length; i++)
+            {
+                if ( allowedFiletypes[i].match(/(jpg)|(gif)|(png)|(bmp)$/) )
+                {
+                    if (!allimg && !allfiles)
+                    {
+                        cleanArray.push(allowedFiletypes[i]);
+                    }
+                }
+                else if ( allowedFiletypes[i].match(/(pdf)|(txt)|(doc)|(docx)|(rtf)$/) )
+                {
+                    if (!alltext && !allfiles)
+                    {
+                        cleanArray.push(allowedFiletypes[i]);
+                    }
+                }
+                else
+                {
+                    console.log('Extension not set in form_builder.js: ' + allowedFiletypes[i]);
+                    cleanArray.push(allowedFiletypes[i]);
+                }
+            }
+        }
+        else
+        {
+            cleanArray = ['allfiles'];
+        }
+
+        cleanArray = cleanArray.join('|');
 
         // make the call
         $.ajax(
@@ -1269,7 +1318,7 @@ jsBackend.formBuilder.fields =
                         field_id: fieldId,
                         type: type,
                         label: label,
-                        allowed_filetypes: allowedFiletypes,
+                        allowed_filetypes: cleanArray,
                         allowed_filetypes_error_message: allowedFiletypesError,
                         required: required,
                         required_error_message: requiredErrorMessage

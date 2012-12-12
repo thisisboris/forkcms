@@ -35,10 +35,16 @@
                                     {$fields.label}{option:fields.required}<abbr title="{$lblRequiredField}">*</abbr>{/option:fields.required}
                                 </label>
                                 {$fields.html}
+                                {option:fields.restrictFiletypes}
                                 <div class="filerestriction">
                                     <p class="label">{$lblAllowedTypes|ucfirst}</p>
-                                    {$fields.validTypes}
+                                    <ul>
+                                        {iteration:fields.allowedFiletypes}
+                                            <li>{$fields.allowedFiletypes}</li>
+                                        {/iteration:fields.allowedFiletypes}
+                                    </ul>
                                 </div>
+                                {/option:fields.restrictFiletypes}
                                 {option:fields.error}<span class="formError inlineError">{$fields.error}</span>{/option:fields.error}
                             </p>
                         {/option:fields.file}
