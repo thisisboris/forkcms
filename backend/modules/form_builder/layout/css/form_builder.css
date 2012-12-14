@@ -180,6 +180,11 @@
 			background-position: 10px -160px;
 		}
 
+        #formElements .options li#fileSelector a {
+            background-image: url('../images/upload_icon.png');
+            background-position: 12px 8px;
+        }
+
 		#formElements .options li#headingSelector a {
 			background-position: 10px -192px;
 		}
