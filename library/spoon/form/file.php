@@ -139,7 +139,7 @@ class SpoonFormFile extends SpoonFormAttributes
 
 
 	/**
-	 * Retrieve the filename of the uploade file.
+	 * Retrieve the filename of the uploaded file.
 	 *
 	 * @return	string
 	 * @param	bool[optional] $includeExtension	Should the extension be included in the file name?
@@ -345,7 +345,7 @@ class SpoonFormFile extends SpoonFormAttributes
 			if(isset($_FILES[$this->attributes['name']]) && $_FILES[$this->attributes['name']]['error'] == 0 && $_FILES[$this->attributes['name']] != '') $hasError = false;
 		}
 
-		// has erorr?
+		// has error?
 		if($hasError)
 		{
 			if($error !== null) $this->setError($error);
